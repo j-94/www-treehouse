@@ -1,0 +1,58 @@
+name: Deploy WEB
+
+on:
+  push:
+    branches:
+      - main # Deploy on push to the `main` branch
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Setup pnpm
+      uses: pnpm/action-setup@v2
+      with:
+        version: 8
+
+    - name: Install Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: 22 # Ensure this matches your project's Node.js version
+        cache: 'pnpm'
+
+    - name: Install dependencies
+      run: pnpm install
+
+    - name: Build the project
+      run: pnpm build
+
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: build
+        path: dist/
+
+    - name: Deploy to server
+      env:
+        SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+      run: |
+        # Set up SSH key for deployment
+        mkdir -p ~/.ssh
+        echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+
+        # Add host key verification
+        echo "StrictHostKeyChecking no" >> ~/.ssh/config
+        ssh-keyscan -H 34.23.242.57 >> ~/.ssh/known_hosts
+
+        # Define variables
+        HOST="34.23.242.57"
+        DEPLOY_PATH="/var/www/thesereni/html"
+        BUILD_PATH="dist"
+
+        # Transfer build files to the server
+        rsync -avz -e "ssh -i ~/.ssh/id_rsa" --delete --rsync-path="sudo rsync" $BUILD_PATH/* ubuntu@$HOST:"$DEPLOY_PATH"
