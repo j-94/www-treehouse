@@ -69,40 +69,43 @@ async function mockSearchAPI(params: SearchParams): Promise<Dispensary[]> {
   // Return mock data based on params
   return [
     {
-      id: "1",
+      id: 1,
       name: "Karma Canna Cafe Dispensary",
-      category: "Bangkok Cannabis Stores",
+      city: "Bangkok",
+      state: "Thailand",
+      image_url: process.env.NEXT_PUBLIC_IMAGE_URL || null,
+      description: "A premium cannabis dispensary in Bangkok",
       rating: 5.0,
-      reviewCount: 136,
-      image: `${process.env.NEXT_PUBLIC_IMAGE_URL}`,
-      verified: true,
-      promotion: {
-        type: "discount",
-        discount: 15,
-        eligibility: "medical card holders",
+      review_count: 136,
+      created_at: new Date().toISOString(),
+      metadata: {
+        category: "Bangkok Cannabis Stores",
+        verified: true,
+        promotion: {
+          type: "discount",
+          discount: 15,
+          eligibility: "medical card holders",
+        },
+        location: {
+          lat: 13.7563,
+          lng: 100.5018,
+          address: "Bangkok, Thailand",
+        },
+        contact: {
+          phone: "+66123456789",
+          website: "https://example.com",
+          line: "@karmacanna",
+          facebook: "karmacannacafe",
+        },
+        features: {
+          medical: true,
+          recreational: true,
+          delivery: true,
+          cardDiscount: true,
+        }
       },
-      location: {
-        lat: 13.7563,
-        lng: 100.5018,
-        address: "Bangkok, Thailand",
-      },
-      contact: {
-        phone: "+66123456789",
-        website: "https://example.com",
-        line: "@karmacanna",
-        facebook: "karmacannacafe",
-      },
-      features: {
-        medical: true,
-        recreational: true,
-        delivery: true,
-        cardDiscount: true,
-      },
-      reviews: [],
-      photos: [],
-      licenses: ["Medical", "Recreational"],
-    },
-    // Add more mock dispensaries here
+      thumbhash: null
+    }
   ]
 }
 

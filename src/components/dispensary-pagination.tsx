@@ -1,27 +1,36 @@
 "use client"
 
-import Form from "next/form"
-import { useFormStatus } from "react-dom"
 import { Button } from "@/components/ui/button"
 import { Pagination, PaginationContent, PaginationItem } from "@/components/ui/pagination"
 import type { SearchParams } from "@/lib/url-state"
+import { stringifySearchParams } from "@/lib/url-state"
+import Link from "next/link"
 
-function FormValues({
+function PaginationLink({
   searchParams,
   pageNumber,
+  children,
+  disabled = false,
 }: {
   searchParams: SearchParams
   pageNumber: number
+  children: React.ReactNode
+  disabled?: boolean
 }) {
-  const { pending } = useFormStatus()
+  const updatedParams = { ...searchParams, page: pageNumber }
+  const href = `/?${stringifySearchParams(updatedParams)}`
 
   return (
-    <div data-pending={pending ? "" : undefined}>
-      {Object.entries(searchParams).map(
-        ([key, value]) => key !== "page" && <input key={key} type="hidden" name={key} value={value as string} />,
-      )}
-      <input type="hidden" name="page" value={pageNumber.toString()} />
-    </div>
+    <Button
+      variant="ghost"
+      size="icon"
+      disabled={disabled}
+      asChild
+    >
+      <Link href={href}>
+        {children}
+      </Link>
+    </Button>
   )
 }
 
@@ -44,25 +53,29 @@ export function DispensaryPagination({
     <Pagination>
       <PaginationContent className="flex items-center justify-between">
         <PaginationItem>
-          <Form action="/">
-            <FormValues searchParams={searchParams} pageNumber={Math.max(1, currentPage - 1)} />
-            <Button variant="ghost" type="submit" size="icon" disabled={currentPage <= 1}>
-              ←
-            </Button>
-          </Form>
+          <PaginationLink
+            searchParams={searchParams}
+            pageNumber={Math.max(1, currentPage - 1)}
+            disabled={currentPage <= 1}
+          >
+            ←
+          </PaginationLink>
         </PaginationItem>
 
-        <div className="text-sm text-muted-foreground">
-          {totalResults.toLocaleString()} results ({currentPage.toLocaleString()} of {totalPages.toLocaleString()})
-        </div>
+        <PaginationItem>
+          <span className="text-sm text-gray-600">
+            Page {currentPage} of {totalPages} ({totalResults} results)
+          </span>
+        </PaginationItem>
 
         <PaginationItem>
-          <Form action="/">
-            <FormValues searchParams={searchParams} pageNumber={Math.min(totalPages, currentPage + 1)} />
-            <Button variant="ghost" type="submit" size="icon" disabled={currentPage >= totalPages}>
-              →
-            </Button>
-          </Form>
+          <PaginationLink
+            searchParams={searchParams}
+            pageNumber={Math.min(totalPages, currentPage + 1)}
+            disabled={currentPage >= totalPages}
+          >
+            →
+          </PaginationLink>
         </PaginationItem>
       </PaginationContent>
     </Pagination>

@@ -1,7 +1,17 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 
-export function PromoBanner() {
+interface Promotion {
+  type: string
+  discount: number
+  eligibility: string
+}
+
+interface PromoBannerProps {
+  promotion: Promotion
+}
+
+export function PromoBanner({ promotion }: PromoBannerProps) {
   return (
     <Card className="bg-green-500 text-white border-0">
       <CardContent className="p-4 space-y-4">
@@ -11,8 +21,8 @@ export function PromoBanner() {
           </div>
           <div className="space-y-1 flex-1">
             <div className="text-sm font-medium">THIS SHOP OFFERS A</div>
-            <div className="text-2xl font-bold">15% DISCOUNT</div>
-            <div className="text-sm">FOR MEDICINAL CARD HOLDERS</div>
+            <div className="text-2xl font-bold">{promotion.discount}% DISCOUNT</div>
+            <div className="text-sm">FOR {promotion.eligibility.toUpperCase()}</div>
           </div>
         </div>
         <div className="flex gap-2">

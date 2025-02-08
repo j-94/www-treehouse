@@ -1,38 +1,46 @@
+"use client"
+
 import { Card, CardContent } from "@/components/ui/card"
 import { Rating } from "./rating"
 import { PromoBanner } from "./promo-banner"
 import { VerifiedBadge } from "./verified-badge"
 import { PhotoGallery } from "./photo-gallery"
 import { SocialButtons } from "./social-buttons"
+import type { Dispensary } from "@/types/directory"
 
-export function BusinessCard() {
+interface BusinessCardProps {
+  dispensary: Dispensary
+  className?: string
+}
+
+export function BusinessCard({ dispensary, className = "" }: BusinessCardProps) {
+  const metadata = dispensary.metadata as any // TODO: Type this properly
+
   return (
-    <Card className="h-full overflow-auto border-0 rounded-none">
-      <CardContent className="p-0 space-y-6">
-        <PromoBanner />
-
-        <div className="px-6 space-y-4">
+    <Card className={`overflow-hidden ${className}`}>
+      <CardContent className="p-0">
+        <div className="relative">
+          <PhotoGallery imageUrl={dispensary.image_url} />
+          {metadata?.verified && <VerifiedBadge className="absolute top-2 right-2" />}
+        </div>
+        <div className="p-4 space-y-4">
           <div>
-            <h1 className="text-2xl font-bold">Karma Canna Cafe Dispensary</h1>
-            <VerifiedBadge className="mt-2" />
-            <div className="flex items-center gap-2 mt-2">
-              <Rating rating={5.0} />
-              <span className="text-lg">5.0</span>
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold">{dispensary.name}</h3>
+              <Rating value={dispensary.rating || 0} reviewCount={dispensary.review_count} />
             </div>
-            <p className="text-sm text-muted-foreground mt-1">Bangkok Cannabis Stores</p>
+            <p className="text-sm text-gray-600">{metadata?.category}</p>
           </div>
 
-          <PhotoGallery />
+          {metadata?.promotion && <PromoBanner promotion={metadata.promotion} />}
 
-          <SocialButtons />
+          <div className="text-sm text-gray-600">
+            <p>{metadata?.location?.address}</p>
+          </div>
 
-          <p className="text-sm text-muted-foreground">
-            Nestled in the hustle and bustle of the land of smiles, Our medical cannabis dispensary Karma Canna Cafe was
-            inspired by travels in Amsterdam, the US, and Canada.
-          </p>
+          {metadata?.contact && <SocialButtons contact={metadata.contact} />}
         </div>
       </CardContent>
     </Card>
   )
-}
-
+} 
