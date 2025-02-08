@@ -1,0 +1,1 @@
+[Cursor] Prepare clean-v0 for production - Add all new components and configurations
