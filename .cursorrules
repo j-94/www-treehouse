@@ -1,0 +1,283 @@
+# Instructions
+
+During you interaction with the user, if you find anything reusable in this project (e.g. version of a library, model name), especially about a fix to a mistake you made or a correction you received, you should take note in the `Lessons` section in the `.cursorrules` file so you will not make the same mistake again. 
+
+You should also use the `.cursorrules` file as a scratchpad to organize your thoughts. Especially when you receive a new task, you should first review the content of the scratchpad, clear old different task if necessary, first explain the task, and plan the steps you need to take to complete the task. You can use todo markers to indicate the progress, e.g.
+[X] Task 1
+[ ] Task 2
+
+Also update the progress of the task in the Scratchpad when you finish a subtask.
+Especially when you finished a milestone, it will help to improve your depth of task accomplishment to use the scratchpad to reflect and plan.
+The goal is to help you maintain a big picture as well as the progress of the task. Always refer to the Scratchpad when you plan the next step.
+
+# Tools
+
+Note all the tools are in python. So in the case you need to do batch processing, you can always consult the python files and write your own script.
+
+## Screenshot Verification
+The screenshot verification workflow allows you to capture screenshots of web pages and verify their appearance using LLMs. The following tools are available:
+
+1. Screenshot Capture:
+```bash
+venv/bin/python tools/screenshot_utils.py URL [--output OUTPUT] [--width WIDTH] [--height HEIGHT]
+```
+
+2. LLM Verification with Images:
+```bash
+venv/bin/python tools/llm_api.py --prompt "Your verification question" --provider {openai|anthropic} --image path/to/screenshot.png
+```
+
+Example workflow:
+```python
+from screenshot_utils import take_screenshot_sync
+from llm_api import query_llm
+
+# Take a screenshot
+screenshot_path = take_screenshot_sync('https://example.com', 'screenshot.png')
+
+# Verify with LLM
+response = query_llm(
+    "What is the background color and title of this webpage?",
+    provider="openai",  # or "anthropic"
+    image_path=screenshot_path
+)
+print(response)
+```
+
+## LLM
+
+You always have an LLM at your side to help you with the task. For simple tasks, you could invoke the LLM by running the following command:
+```
+venv/bin/python ./tools/llm_api.py --prompt "What is the capital of France?" --provider "anthropic"
+```
+
+The LLM API supports multiple providers:
+- OpenAI (default, model: gpt-4o)
+- Azure OpenAI (model: configured via AZURE_OPENAI_MODEL_DEPLOYMENT in .env file, defaults to gpt-4o-ms)
+- DeepSeek (model: deepseek-chat)
+- Anthropic (model: claude-3-sonnet-20240229)
+- Gemini (model: gemini-pro)
+- Local LLM (model: Qwen/Qwen2.5-32B-Instruct-AWQ)
+
+But usually it's a better idea to check the content of the file and use the APIs in the `tools/llm_api.py` file to invoke the LLM if needed.
+
+## Web browser
+
+You could use the `tools/web_scraper.py` file to scrape the web.
+```
+venv/bin/python ./tools/web_scraper.py --max-concurrent 3 URL1 URL2 URL3
+```
+This will output the content of the web pages.
+
+## Search engine
+
+You could use the `tools/search_engine.py` file to search the web.
+```
+venv/bin/python ./tools/search_engine.py "your search keywords"
+```
+This will output the search results in the following format:
+```
+URL: https://example.com
+Title: This is the title of the search result
+Snippet: This is a snippet of the search result
+```
+If needed, you can further use the `web_scraper.py` file to scrape the web page content.
+
+# Lessons
+
+## Official Crawl4AI Documentation
+
+You can use the `treehouse/util/official-docs.txt` file to get the official documentation of the Crawl4AI library.
+
+
+## Standalone Script Guidelines
+
+1. File Structure:
+   - Use `.uv` extension for standalone scripts
+   - Include the following structure at the top:
+     ```python
+     #!/usr/bin/env sh
+     #!/usr/bin/env -S uv run --script --quiet
+     # /// script
+     # requires-python = "~=3.11"
+     # dependencies = [
+     #     "package1>=version",
+     #     "package2>=version"
+     # ]
+     # ///
+
+     """:"
+     which uv >/dev/null \
+         || curl -LsSf https://astral.sh/uv/install.sh | sh \
+         && tail -n +3 $0 | $(head -n 2 $0 | tail -n 1 | cut -c 3-) - "$@"
+     exit $?
+     ":"""
+
+     #region Documentation
+     """
+     UV File: script_name.uv
+     Purpose: Brief description
+     Dependencies: Listed in script header
+     Usage: Just run the script directly: ./script_name.uv
+     Author: Name
+     Date: Creation/update date
+     """
+     #endregion
+     ```
+
+2. Dependencies:
+   - List dependencies in the script header using the `# /// script` section
+   - Specify exact Python version requirements
+   - No need for separate requirements.txt files
+   - Dependencies will be installed automatically in an isolated environment
+
+3. Script Organization:
+   - Place imports after the documentation region
+   - Group imports by standard lib, third-party, local
+   - Include logging configuration if needed
+   - Use type hints and docstrings
+   - Add argparse for command-line arguments
+
+4. Best Practices:
+   - Make script executable: `chmod +x script_name.py`
+   - Include error handling and logging
+   - Add progress indicators for long-running tasks
+   - Save intermediate results for data processing
+   - Use async/await for I/O-bound operations
+
+5. Usage:
+   - Scripts can be run directly: `./script_name.py`
+   - No need to install UV manually
+   - No need to create virtual environments manually
+   - All dependencies are handled automatically
+
+6. Testing:
+   - Include basic test cases in docstrings
+   - Add example usage in documentation
+   - Test with clean environment before sharing
+   - Test the auto-installation feature
+
+7. Maintenance:
+   - Update dependencies regularly
+   - Document breaking changes
+   - Keep documentation current
+   - Version control integration
+   - Test UV auto-installation periodically
+
+
+## R2E Integration Guidelines
+
+1. Repository Analysis:
+   - Use `r2e setup` to initialize repository integration
+   - Run `r2e extract` with unique experiment ID for function extraction
+   - Always specify Python version (~=3.11) in UV scripts
+   - Use UV's dependency resolution for conflicts
+
+2. Integration Process:
+   ```python
+   #!/usr/bin/env sh
+   #!/usr/bin/env -S uv run --script --quiet
+   # /// script
+   # requires-python = "~=3.11"
+   # dependencies = [
+   #     "r2e>=0.1.0",
+   #     "pygount>=1.6",
+   #     "radon>=5.1"
+   # ]
+   # ///
+
+   # Standard UV script header...
+
+   def integrate_repo(repo_url: str, exp_id: str):
+       """R2E-powered repository integration with UV dependency management."""
+       # Setup and extract
+       subprocess.run(["r2e", "setup", "-r", repo_url], check=True)
+       subprocess.run(["r2e", "extract", "-e", exp_id, "--overwrite_extracted"], check=True)
+       
+       # Build with UV dependency management
+       subprocess.run(["r2e", "build", "-e", exp_id], check=True)
+       
+       # Generate and execute tests
+       subprocess.run(["r2e", "genexec", "-e", exp_id, "--save_chat"], check=True)
+   ```
+
+3. Best Practices:
+   - Use unique experiment IDs for each integration
+   - Run in Docker mode by default for isolation
+   - Save chat logs for debugging and review
+   - Handle dependencies through UV's resolution system
+   - Check coverage with `min_cov` parameter
+
+4. Common Issues:
+   - Docker build failures: Check UV dependency conflicts
+   - Test generation issues: Review chat logs
+   - Coverage problems: Adjust min_cov and min_valid parameters
+   - Local mode issues: Verify UV environment setup
+
+5. Integration Workflow:
+   ```bash
+   # 1. Setup UV environment
+   uv venv && source .venv/bin/activate
+   
+   # 2. Run integration script
+   ./integrate_repo.uv https://github.com/example/repo quickstart
+   
+   # 3. Review results
+   cat /path/to/execution/quickstart_out.json
+   ```
+
+## User Specified Lessons
+
+- You have a python venv in ./venv. Use it.
+- Include info useful for debugging in the program output.
+- Read the file before you try to edit it.
+- Due to Cursor's limit, when you use `git` and `gh` and need to submit a multiline commit message, first write the message in a file, and then use `git commit -F <filename>` or similar command to commit. And then remove the file. Include "[Cursor] " in the commit message and PR title.
+
+## Cursor learned
+
+- For search results, ensure proper handling of different character encodings (UTF-8) for international queries
+- Add debug information to stderr while keeping the main output clean in stdout for better pipeline integration
+- When using seaborn styles in matplotlib, use 'seaborn-v0_8' instead of 'seaborn' as the style name due to recent seaborn version changes
+- Use 'gpt-4o' as the model name for OpenAI's GPT-4 with vision capabilities
+- When scraping weed.th shop pages:
+  - Required fields (name, description, rating, main image, categories, items, area) must be present for valid listings
+  - Optional fields (reviews, status, hours, stats) may not be present in all shops
+  - Some selectors (like map) work consistently across all pages
+  - Product selectors should handle variable number of items and categories
+  - Use specific class names for product elements (e.g. ShopProductAll_header__BSmhH)
+  - Handle missing optional fields gracefully in the scraper
+- R2E is primarily designed for Python code and does not support TypeScript/JavaScript
+  - AST parsing errors occur when trying to parse TypeScript files
+  - Need to use a different approach for TypeScript projects
+
+# Scratchpad
+
+Task: Convert maplinkscrape.py into a standalone UV script
+
+Plan:
+[X] Convert script to UV format with proper header
+[X] Add proper dependency declarations
+[X] Fix linter errors
+[X] Add proper error handling
+[X] Add proper documentation
+[X] Add proper logging
+[X] Make script executable
+
+Progress:
+- Converted maplinkscrape.py to maplinkscrape.uv with UV format
+- Added proper dependency declarations for playwright, rich, and pydantic
+- Fixed linter errors:
+  - Removed unused Dict import
+  - Added specific exception types (TimeoutError)
+  - Added UTF-8 encoding for file operations
+  - Added error type logging for better debugging
+- Added comprehensive documentation
+- Added proper error handling with specific exceptions
+- Made script executable with chmod +x
+- Script is now self-contained and handles its own dependency installation
+
+Notes:
+- Script can now be run directly with ./maplinkscrape.uv
+- Dependencies will be automatically installed by UV
+- Added better error handling and logging
+- Script is now more maintainable and follows best practices

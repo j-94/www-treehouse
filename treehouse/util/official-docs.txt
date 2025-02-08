@@ -1,0 +1,2867 @@
+# Official Crawl4AI Documentation
+
+Generated from help(crawl4ai)
+
+Help on package crawl4ai:
+
+NAME
+    crawl4ai - # __init__.py
+
+PACKAGE CONTENTS
+    __version__
+    async_configs
+    async_crawler_strategy
+    async_database
+    async_dispatcher
+    async_dispatcher_
+    async_logger
+    async_webcrawler
+    cache_context
+    chunking_strategy
+    cli
+    config
+    content_filter_strategy
+    content_scraping_strategy
+    crawler_strategy
+    database
+    docs_manager
+    extraction_strategy
+    html2text (package)
+    install
+    js_snippet (package)
+    llmtxt
+    markdown_generation_strategy
+    migrations
+    model_loader
+    models
+    prompts
+    ssl_certificate
+    user_agent_generator
+    utils
+    version_manager
+    web_crawler
+
+CLASSES
+    abc.ABC(builtins.object)
+        crawl4ai.async_dispatcher.BaseDispatcher
+            crawl4ai.async_dispatcher.MemoryAdaptiveDispatcher
+            crawl4ai.async_dispatcher.SemaphoreDispatcher
+        crawl4ai.chunking_strategy.ChunkingStrategy
+            crawl4ai.chunking_strategy.RegexChunking
+        crawl4ai.content_filter_strategy.RelevantContentFilter
+            crawl4ai.content_filter_strategy.BM25ContentFilter
+            crawl4ai.content_filter_strategy.LLMContentFilter
+            crawl4ai.content_filter_strategy.PruningContentFilter
+        crawl4ai.content_scraping_strategy.ContentScrapingStrategy
+            crawl4ai.content_scraping_strategy.WebScrapingStrategy
+                crawl4ai.content_scraping_strategy.LXMLWebScrapingStrategy
+        crawl4ai.extraction_strategy.ExtractionStrategy
+            crawl4ai.extraction_strategy.CosineStrategy
+            crawl4ai.extraction_strategy.LLMExtractionStrategy
+    builtins.object
+        crawl4ai.async_configs.BrowserConfig
+        crawl4ai.async_configs.CrawlerRunConfig
+        crawl4ai.async_dispatcher.CrawlerMonitor
+        crawl4ai.async_dispatcher.RateLimiter
+        crawl4ai.async_webcrawler.AsyncWebCrawler
+    crawl4ai.extraction_strategy.JsonElementExtractionStrategy(crawl4ai.extraction_strategy.ExtractionStrategy)
+        crawl4ai.extraction_strategy.JsonCssExtractionStrategy
+        crawl4ai.extraction_strategy.JsonXPathExtractionStrategy
+    crawl4ai.markdown_generation_strategy.MarkdownGenerationStrategy(abc.ABC)
+        crawl4ai.markdown_generation_strategy.DefaultMarkdownGenerator
+    enum.Enum(builtins.object)
+        crawl4ai.cache_context.CacheMode
+        crawl4ai.models.DisplayMode
+    pydantic.main.BaseModel(builtins.object)
+        crawl4ai.models.CrawlResult
+        crawl4ai.models.MarkdownGenerationResult
+    
+    class AsyncWebCrawler(builtins.object)
+     |  AsyncWebCrawler(crawler_strategy: Optional[crawl4ai.async_crawler_strategy.AsyncCrawlerStrategy] = None, config: Optional[crawl4ai.async_configs.BrowserConfig] = None, always_bypass_cache: bool = False, always_by_pass_cache: Optional[bool] = None, base_directory: str = '/Users/jobs', thread_safe: bool = False, **kwargs)
+     |  
+     |  Asynchronous web crawler with flexible caching capabilities.
+     |  
+     |  There are two ways to use the crawler:
+     |  
+     |  1. Using context manager (recommended for simple cases):
+     |      ```python
+     |      async with AsyncWebCrawler() as crawler:
+     |          result = await crawler.arun(url="https://example.com")
+     |      ```
+     |  
+     |  2. Using explicit lifecycle management (recommended for long-running applications):
+     |      ```python
+     |      crawler = AsyncWebCrawler()
+     |      await crawler.start()
+     |  
+     |      # Use the crawler multiple times
+     |      result1 = await crawler.arun(url="https://example.com")
+     |      result2 = await crawler.arun(url="https://another.com")
+     |  
+     |      await crawler.close()
+     |      ```
+     |  
+     |  Migration Guide:
+     |  Old way (deprecated):
+     |      crawler = AsyncWebCrawler(always_by_pass_cache=True, browser_type="chromium", headless=True)
+     |  
+     |  New way (recommended):
+     |      browser_config = BrowserConfig(browser_type="chromium", headless=True)
+     |      crawler = AsyncWebCrawler(config=browser_config)
+     |  
+     |  
+     |  Attributes:
+     |      browser_config (BrowserConfig): Configuration object for browser settings.
+     |      crawler_strategy (AsyncCrawlerStrategy): Strategy for crawling web pages.
+     |      logger (AsyncLogger): Logger instance for recording events and errors.
+     |      always_bypass_cache (bool): Whether to always bypass cache.
+     |      crawl4ai_folder (str): Directory for storing cache.
+     |      base_directory (str): Base directory for storing cache.
+     |      ready (bool): Whether the crawler is ready for use.
+     |  
+     |      Methods:
+     |          start(): Start the crawler explicitly without using context manager.
+     |          close(): Close the crawler explicitly without using context manager.
+     |          arun(): Run the crawler for a single source: URL (web, local file, or raw HTML).
+     |          awarmup(): Perform warmup sequence.
+     |          arun_many(): Run the crawler for multiple sources.
+     |          aprocess_html(): Process HTML content.
+     |  
+     |  Typical Usage:
+     |      async with AsyncWebCrawler() as crawler:
+     |          result = await crawler.arun(url="https://example.com")
+     |          print(result.markdown)
+     |  
+     |      Using configuration:
+     |      browser_config = BrowserConfig(browser_type="chromium", headless=True)
+     |      async with AsyncWebCrawler(config=browser_config) as crawler:
+     |          crawler_config = CrawlerRunConfig(
+     |              cache_mode=CacheMode.BYPASS
+     |          )
+     |          result = await crawler.arun(url="https://example.com", config=crawler_config)
+     |          print(result.markdown)
+     |  
+     |  Methods defined here:
+     |  
+     |  async __aenter__(self)
+     |  
+     |  async __aexit__(self, exc_type, exc_val, exc_tb)
+     |  
+     |  __init__(self, crawler_strategy: Optional[crawl4ai.async_crawler_strategy.AsyncCrawlerStrategy] = None, config: Optional[crawl4ai.async_configs.BrowserConfig] = None, always_bypass_cache: bool = False, always_by_pass_cache: Optional[bool] = None, base_directory: str = '/Users/jobs', thread_safe: bool = False, **kwargs)
+     |      Initialize the AsyncWebCrawler.
+     |      
+     |      Args:
+     |          crawler_strategy: Strategy for crawling web pages. If None, will create AsyncPlaywrightCrawlerStrategy
+     |          config: Configuration object for browser settings. If None, will be created from kwargs
+     |          always_bypass_cache: Whether to always bypass cache (new parameter)
+     |          always_by_pass_cache: Deprecated, use always_bypass_cache instead
+     |          base_directory: Base directory for storing cache
+     |          thread_safe: Whether to use thread-safe operations
+     |          **kwargs: Additional arguments for backwards compatibility
+     |  
+     |  async aclear_cache(self)
+     |      Clear the cache database.
+     |  
+     |  async aflush_cache(self)
+     |      Flush the cache database.
+     |  
+     |  async aget_cache_size(self)
+     |      Get the total number of cached items.
+     |  
+     |  async aprocess_html(self, url: str, html: str, extracted_content: str, config: crawl4ai.async_configs.CrawlerRunConfig, screenshot: str, pdf_data: str, verbose: bool, **kwargs) -> crawl4ai.models.CrawlResult
+     |      Process HTML content using the provided configuration.
+     |      
+     |      Args:
+     |          url: The URL being processed
+     |          html: Raw HTML content
+     |          extracted_content: Previously extracted content (if any)
+     |          config: Configuration object controlling processing behavior
+     |          screenshot: Screenshot data (if any)
+     |          pdf_data: PDF data (if any)
+     |          verbose: Whether to enable verbose logging
+     |          **kwargs: Additional parameters for backwards compatibility
+     |      
+     |      Returns:
+     |          CrawlResult: Processed result containing extracted and formatted content
+     |  
+     |  async arun(self, url: str, config: Optional[crawl4ai.async_configs.CrawlerRunConfig] = None, word_count_threshold=1, extraction_strategy: crawl4ai.extraction_strategy.ExtractionStrategy = None, chunking_strategy: crawl4ai.chunking_strategy.ChunkingStrategy = <crawl4ai.chunking_strategy.RegexChunking object at 0x107d26e80>, content_filter: crawl4ai.content_filter_strategy.RelevantContentFilter = None, cache_mode: Optional[crawl4ai.cache_context.CacheMode] = None, bypass_cache: bool = False, disable_cache: bool = False, no_cache_read: bool = False, no_cache_write: bool = False, css_selector: str = None, screenshot: bool = False, pdf: bool = False, user_agent: str = None, verbose=True, **kwargs) -> crawl4ai.models.CrawlResult
+     |      Runs the crawler for a single source: URL (web, local file, or raw HTML).
+     |      
+     |      Migration Guide:
+     |      Old way (deprecated):
+     |          result = await crawler.arun(
+     |              url="https://example.com",
+     |              word_count_threshold=200,
+     |              screenshot=True,
+     |              ...
+     |          )
+     |      
+     |      New way (recommended):
+     |          config = CrawlerRunConfig(
+     |              word_count_threshold=200,
+     |              screenshot=True,
+     |              ...
+     |          )
+     |          result = await crawler.arun(url="https://example.com", crawler_config=config)
+     |      
+     |      Args:
+     |          url: The URL to crawl (http://, https://, file://, or raw:)
+     |          crawler_config: Configuration object controlling crawl behavior
+     |          [other parameters maintained for backwards compatibility]
+     |      
+     |      Returns:
+     |          CrawlResult: The result of crawling and processing
+     |  
+     |  async arun_many(self, urls: List[str], config: Optional[crawl4ai.async_configs.CrawlerRunConfig] = None, dispatcher: Optional[crawl4ai.async_dispatcher.BaseDispatcher] = None, word_count_threshold=1, extraction_strategy: crawl4ai.extraction_strategy.ExtractionStrategy = None, chunking_strategy: crawl4ai.chunking_strategy.ChunkingStrategy = <crawl4ai.chunking_strategy.RegexChunking object at 0x107d2e610>, content_filter: crawl4ai.content_filter_strategy.RelevantContentFilter = None, cache_mode: Optional[crawl4ai.cache_context.CacheMode] = None, bypass_cache: bool = False, css_selector: str = None, screenshot: bool = False, pdf: bool = False, user_agent: str = None, verbose=True, **kwargs) -> Union[List[~CrawlResultT], collections.abc.AsyncGenerator[~CrawlResultT, None]]
+     |      Runs the crawler for multiple URLs concurrently using a configurable dispatcher strategy.
+     |      
+     |      Args:
+     |      urls: List of URLs to crawl
+     |      config: Configuration object controlling crawl behavior for all URLs
+     |      dispatcher: The dispatcher strategy instance to use. Defaults to MemoryAdaptiveDispatcher
+     |      [other parameters maintained for backwards compatibility]
+     |      
+     |      Returns:
+     |      Union[List[CrawlResult], AsyncGenerator[CrawlResult, None]]:
+     |          Either a list of all results or an async generator yielding results
+     |      
+     |      Examples:
+     |      
+     |      # Batch processing (default)
+     |      results = await crawler.arun_many(
+     |          urls=["https://example1.com", "https://example2.com"],
+     |          config=CrawlerRunConfig(cache_mode=CacheMode.BYPASS)
+     |      )
+     |      for result in results:
+     |          print(f"Processed {result.url}: {len(result.markdown)} chars")
+     |      
+     |      # Streaming results
+     |      async for result in await crawler.arun_many(
+     |          urls=["https://example1.com", "https://example2.com"],
+     |          config=CrawlerRunConfig(cache_mode=CacheMode.BYPASS, stream=True),
+     |      ):
+     |          print(f"Processed {result.url}: {len(result.markdown)} chars")
+     |  
+     |  async awarmup(self)
+     |      Initialize the crawler with warm-up sequence.
+     |      
+     |      This method:
+     |      1. Logs initialization info
+     |      2. Sets up browser configuration
+     |      3. Marks the crawler as ready
+     |  
+     |  async close(self)
+     |      Close the crawler explicitly without using context manager.
+     |      This should be called when you're done with the crawler if you used start().
+     |      
+     |      This method will:
+     |      1. Clean up browser resources
+     |      2. Close any open pages and contexts
+     |  
+     |  nullcontext(self)
+     |      异步空上下文管理器
+     |  
+     |  async start(self)
+     |      Start the crawler explicitly without using context manager.
+     |      This is equivalent to using 'async with' but gives more control over the lifecycle.
+     |      
+     |      This method will:
+     |      1. Initialize the browser and context
+     |      2. Perform warmup sequence
+     |      3. Return the crawler instance for method chaining
+     |      
+     |      Returns:
+     |          AsyncWebCrawler: The initialized crawler instance
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data descriptors defined here:
+     |  
+     |  __dict__
+     |      dictionary for instance variables (if defined)
+     |  
+     |  __weakref__
+     |      list of weak references to the object (if defined)
+    
+    class BM25ContentFilter(RelevantContentFilter)
+     |  BM25ContentFilter(user_query: str = None, bm25_threshold: float = 1.0, language: str = 'english')
+     |  
+     |  Content filtering using BM25 algorithm with priority tag handling.
+     |  
+     |  How it works:
+     |  1. Extracts page metadata with fallbacks.
+     |  2. Extracts text chunks from the body element.
+     |  3. Tokenizes the corpus and query.
+     |  4. Applies BM25 algorithm to calculate scores for each chunk.
+     |  5. Filters out chunks below the threshold.
+     |  6. Sorts chunks by score in descending order.
+     |  7. Returns the top N chunks.
+     |  
+     |  Attributes:
+     |      user_query (str): User query for filtering (optional).
+     |      bm25_threshold (float): BM25 threshold for filtering (default: 1.0).
+     |      language (str): Language for stemming (default: 'english').
+     |  
+     |      Methods:
+     |          filter_content(self, html: str, min_word_threshold: int = None)
+     |  
+     |  Method resolution order:
+     |      BM25ContentFilter
+     |      RelevantContentFilter
+     |      abc.ABC
+     |      builtins.object
+     |  
+     |  Methods defined here:
+     |  
+     |  __init__(self, user_query: str = None, bm25_threshold: float = 1.0, language: str = 'english')
+     |      Initializes the BM25ContentFilter class, if not provided, falls back to page metadata.
+     |      
+     |      Note:
+     |      If no query is given and no page metadata is available, then it tries to pick up the first significant paragraph.
+     |      
+     |      Args:
+     |          user_query (str): User query for filtering (optional).
+     |          bm25_threshold (float): BM25 threshold for filtering (default: 1.0).
+     |          language (str): Language for stemming (default: 'english').
+     |  
+     |  filter_content(self, html: str, min_word_threshold: int = None) -> List[str]
+     |      Implements content filtering using BM25 algorithm with priority tag handling.
+     |      
+     |          Note:
+     |      This method implements the filtering logic for the BM25ContentFilter class.
+     |      It takes HTML content as input and returns a list of filtered text chunks.
+     |      
+     |      Args:
+     |          html (str): HTML content to be filtered.
+     |          min_word_threshold (int): Minimum word threshold for filtering (optional).
+     |      
+     |      Returns:
+     |          List[str]: List of filtered text chunks.
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data and other attributes defined here:
+     |  
+     |  __abstractmethods__ = frozenset()
+     |  
+     |  ----------------------------------------------------------------------
+     |  Methods inherited from RelevantContentFilter:
+     |  
+     |  clean_element(self, tag: bs4.element.Tag) -> str
+     |      Common method for cleaning HTML elements with minimal overhead
+     |  
+     |  extract_page_query(self, soup: bs4.BeautifulSoup, body: bs4.element.Tag) -> str
+     |      Common method to extract page metadata with fallbacks
+     |  
+     |  extract_text_chunks(self, body: bs4.element.Tag, min_word_threshold: int = None) -> List[Tuple[str, str]]
+     |      Extracts text chunks from a BeautifulSoup body element while preserving order.
+     |      Returns list of tuples (text, tag_name) for classification.
+     |      
+     |      Args:
+     |          body: BeautifulSoup Tag object representing the body element
+     |      
+     |      Returns:
+     |          List of (text, tag_name) tuples
+     |  
+     |  is_excluded(self, tag: bs4.element.Tag) -> bool
+     |      Common method for exclusion logic
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data descriptors inherited from RelevantContentFilter:
+     |  
+     |  __dict__
+     |      dictionary for instance variables (if defined)
+     |  
+     |  __weakref__
+     |      list of weak references to the object (if defined)
+    
+    class BaseDispatcher(abc.ABC)
+     |  BaseDispatcher(rate_limiter: Optional[crawl4ai.async_dispatcher.RateLimiter] = None, monitor: Optional[crawl4ai.async_dispatcher.CrawlerMonitor] = None)
+     |  
+     |  Method resolution order:
+     |      BaseDispatcher
+     |      abc.ABC
+     |      builtins.object
+     |  
+     |  Methods defined here:
+     |  
+     |  __init__(self, rate_limiter: Optional[crawl4ai.async_dispatcher.RateLimiter] = None, monitor: Optional[crawl4ai.async_dispatcher.CrawlerMonitor] = None)
+     |      Initialize self.  See help(type(self)) for accurate signature.
+     |  
+     |  async crawl_url(self, url: str, config: crawl4ai.async_configs.CrawlerRunConfig, task_id: str, monitor: Optional[crawl4ai.async_dispatcher.CrawlerMonitor] = None) -> crawl4ai.models.CrawlerTaskResult
+     |  
+     |  async run_urls(self, urls: List[str], crawler: 'AsyncWebCrawler', config: crawl4ai.async_configs.CrawlerRunConfig, monitor: Optional[crawl4ai.async_dispatcher.CrawlerMonitor] = None) -> List[crawl4ai.models.CrawlerTaskResult]
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data descriptors defined here:
+     |  
+     |  __dict__
+     |      dictionary for instance variables (if defined)
+     |  
+     |  __weakref__
+     |      list of weak references to the object (if defined)
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data and other attributes defined here:
+     |  
+     |  __abstractmethods__ = frozenset({'crawl_url', 'run_urls'})
+    
+    class BrowserConfig(builtins.object)
+     |  BrowserConfig(browser_type: str = 'chromium', headless: bool = True, use_managed_browser: bool = False, cdp_url: str = None, use_persistent_context: bool = False, user_data_dir: str = None, chrome_channel: str = 'chromium', channel: str = 'chromium', proxy: str = None, proxy_config: dict = None, viewport_width: int = 1080, viewport_height: int = 600, accept_downloads: bool = False, downloads_path: str = None, storage_state: Union[str, dict, NoneType] = None, ignore_https_errors: bool = True, java_script_enabled: bool = True, sleep_on_close: bool = False, verbose: bool = True, cookies: list = None, headers: dict = None, user_agent: str = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/116.0.0.0 Safari/537.36', user_agent_mode: str = '', user_agent_generator_config: dict = {}, text_mode: bool = False, light_mode: bool = False, extra_args: list = None, debugging_port: int = 9222, host: str = 'localhost')
+     |  
+     |  Configuration class for setting up a browser instance and its context in AsyncPlaywrightCrawlerStrategy.
+     |  
+     |  This class centralizes all parameters that affect browser and context creation. Instead of passing
+     |  scattered keyword arguments, users can instantiate and modify this configuration object. The crawler
+     |  code will then reference these settings to initialize the browser in a consistent, documented manner.
+     |  
+     |  Attributes:
+     |      browser_type (str): The type of browser to launch. Supported values: "chromium", "firefox", "webkit".
+     |                          Default: "chromium".
+     |      headless (bool): Whether to run the browser in headless mode (no visible GUI).
+     |                       Default: True.
+     |      use_managed_browser (bool): Launch the browser using a managed approach (e.g., via CDP), allowing
+     |                                  advanced manipulation. Default: False.
+     |      cdp_url (str): URL for the Chrome DevTools Protocol (CDP) endpoint. Default: "ws://localhost:9222/devtools/browser/".
+     |      debugging_port (int): Port for the browser debugging protocol. Default: 9222.
+     |      use_persistent_context (bool): Use a persistent browser context (like a persistent profile).
+     |                                     Automatically sets use_managed_browser=True. Default: False.
+     |      user_data_dir (str or None): Path to a user data directory for persistent sessions. If None, a
+     |                                   temporary directory may be used. Default: None.
+     |      chrome_channel (str): The Chrome channel to launch (e.g., "chrome", "msedge"). Only applies if browser_type
+     |                            is "chromium". Default: "chromium".
+     |      channel (str): The channel to launch (e.g., "chromium", "chrome", "msedge"). Only applies if browser_type
+     |                            is "chromium". Default: "chromium".
+     |      proxy (Optional[str]): Proxy server URL (e.g., "http://username:password@proxy:port"). If None, no proxy is used.
+     |                           Default: None.
+     |      proxy_config (dict or None): Detailed proxy configuration, e.g. {"server": "...", "username": "..."}.
+     |                                   If None, no additional proxy config. Default: None.
+     |      viewport_width (int): Default viewport width for pages. Default: 1080.
+     |      viewport_height (int): Default viewport height for pages. Default: 600.
+     |      verbose (bool): Enable verbose logging.
+     |                      Default: True.
+     |      accept_downloads (bool): Whether to allow file downloads. If True, requires a downloads_path.
+     |                               Default: False.
+     |      downloads_path (str or None): Directory to store downloaded files. If None and accept_downloads is True,
+     |                                    a default path will be created. Default: None.
+     |      storage_state (str or dict or None): Path or object describing storage state (cookies, localStorage).
+     |                                           Default: None.
+     |      ignore_https_errors (bool): Ignore HTTPS certificate errors. Default: True.
+     |      java_script_enabled (bool): Enable JavaScript execution in pages. Default: True.
+     |      cookies (list): List of cookies to add to the browser context. Each cookie is a dict with fields like
+     |                      {"name": "...", "value": "...", "url": "..."}.
+     |                      Default: [].
+     |      headers (dict): Extra HTTP headers to apply to all requests in this context.
+     |                      Default: {}.
+     |      user_agent (str): Custom User-Agent string to use. Default: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+     |                         "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36".
+     |      user_agent_mode (str or None): Mode for generating the user agent (e.g., "random"). If None, use the provided
+     |                                     user_agent as-is. Default: None.
+     |      user_agent_generator_config (dict or None): Configuration for user agent generation if user_agent_mode is set.
+     |                                                  Default: None.
+     |      text_mode (bool): If True, disables images and other rich content for potentially faster load times.
+     |                        Default: False.
+     |      light_mode (bool): Disables certain background features for performance gains. Default: False.
+     |      extra_args (list): Additional command-line arguments passed to the browser.
+     |                         Default: [].
+     |  
+     |  Methods defined here:
+     |  
+     |  __init__(self, browser_type: str = 'chromium', headless: bool = True, use_managed_browser: bool = False, cdp_url: str = None, use_persistent_context: bool = False, user_data_dir: str = None, chrome_channel: str = 'chromium', channel: str = 'chromium', proxy: str = None, proxy_config: dict = None, viewport_width: int = 1080, viewport_height: int = 600, accept_downloads: bool = False, downloads_path: str = None, storage_state: Union[str, dict, NoneType] = None, ignore_https_errors: bool = True, java_script_enabled: bool = True, sleep_on_close: bool = False, verbose: bool = True, cookies: list = None, headers: dict = None, user_agent: str = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/116.0.0.0 Safari/537.36', user_agent_mode: str = '', user_agent_generator_config: dict = {}, text_mode: bool = False, light_mode: bool = False, extra_args: list = None, debugging_port: int = 9222, host: str = 'localhost')
+     |      Initialize self.  See help(type(self)) for accurate signature.
+     |  
+     |  clone(self, **kwargs)
+     |      Create a copy of this configuration with updated values.
+     |      
+     |      Args:
+     |          **kwargs: Key-value pairs of configuration options to update
+     |          
+     |      Returns:
+     |          BrowserConfig: A new instance with the specified updates
+     |  
+     |  to_dict(self)
+     |  
+     |  ----------------------------------------------------------------------
+     |  Static methods defined here:
+     |  
+     |  from_kwargs(kwargs: dict) -> 'BrowserConfig'
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data descriptors defined here:
+     |  
+     |  __dict__
+     |      dictionary for instance variables (if defined)
+     |  
+     |  __weakref__
+     |      list of weak references to the object (if defined)
+    
+    class CacheMode(enum.Enum)
+     |  CacheMode(value, names=None, *, module=None, qualname=None, type=None, start=1)
+     |  
+     |  Defines the caching behavior for web crawling operations.
+     |  
+     |  Modes:
+     |  - ENABLED: Normal caching behavior (read and write)
+     |  - DISABLED: No caching at all
+     |  - READ_ONLY: Only read from cache, don't write
+     |  - WRITE_ONLY: Only write to cache, don't read
+     |  - BYPASS: Bypass cache for this operation
+     |  
+     |  Method resolution order:
+     |      CacheMode
+     |      enum.Enum
+     |      builtins.object
+     |  
+     |  Data and other attributes defined here:
+     |  
+     |  BYPASS = <CacheMode.BYPASS: 'bypass'>
+     |  
+     |  DISABLED = <CacheMode.DISABLED: 'disabled'>
+     |  
+     |  ENABLED = <CacheMode.ENABLED: 'enabled'>
+     |  
+     |  READ_ONLY = <CacheMode.READ_ONLY: 'read_only'>
+     |  
+     |  WRITE_ONLY = <CacheMode.WRITE_ONLY: 'write_only'>
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data descriptors inherited from enum.Enum:
+     |  
+     |  name
+     |      The name of the Enum member.
+     |  
+     |  value
+     |      The value of the Enum member.
+     |  
+     |  ----------------------------------------------------------------------
+     |  Readonly properties inherited from enum.EnumMeta:
+     |  
+     |  __members__
+     |      Returns a mapping of member name->value.
+     |      
+     |      This mapping lists all enum members, including aliases. Note that this
+     |      is a read-only view of the internal mapping.
+    
+    class ChunkingStrategy(abc.ABC)
+     |  Abstract base class for chunking strategies.
+     |  
+     |  Method resolution order:
+     |      ChunkingStrategy
+     |      abc.ABC
+     |      builtins.object
+     |  
+     |  Methods defined here:
+     |  
+     |  chunk(self, text: str) -> list
+     |      Abstract method to chunk the given text.
+     |      
+     |      Args:
+     |          text (str): The text to chunk.
+     |      
+     |      Returns:
+     |          list: A list of chunks.
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data descriptors defined here:
+     |  
+     |  __dict__
+     |      dictionary for instance variables (if defined)
+     |  
+     |  __weakref__
+     |      list of weak references to the object (if defined)
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data and other attributes defined here:
+     |  
+     |  __abstractmethods__ = frozenset({'chunk'})
+    
+    class ContentScrapingStrategy(abc.ABC)
+     |  Method resolution order:
+     |      ContentScrapingStrategy
+     |      abc.ABC
+     |      builtins.object
+     |  
+     |  Methods defined here:
+     |  
+     |  async ascrap(self, url: str, html: str, **kwargs) -> crawl4ai.models.ScrapingResult
+     |  
+     |  scrap(self, url: str, html: str, **kwargs) -> crawl4ai.models.ScrapingResult
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data descriptors defined here:
+     |  
+     |  __dict__
+     |      dictionary for instance variables (if defined)
+     |  
+     |  __weakref__
+     |      list of weak references to the object (if defined)
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data and other attributes defined here:
+     |  
+     |  __abstractmethods__ = frozenset({'ascrap', 'scrap'})
+    
+    class CosineStrategy(ExtractionStrategy)
+     |  CosineStrategy(semantic_filter=None, word_count_threshold=10, max_dist=0.2, linkage_method='ward', top_k=3, model_name='sentence-transformers/all-MiniLM-L6-v2', sim_threshold=0.3, **kwargs)
+     |  
+     |  Extract meaningful blocks or chunks from the given HTML using cosine similarity.
+     |  
+     |  How it works:
+     |  1. Pre-filter documents using embeddings and semantic_filter.
+     |  2. Perform clustering using cosine similarity.
+     |  3. Organize texts by their cluster labels, retaining order.
+     |  4. Filter clusters by word count.
+     |  5. Extract meaningful blocks or chunks from the filtered clusters.
+     |  
+     |  Attributes:
+     |      semantic_filter (str): A keyword filter for document filtering.
+     |      word_count_threshold (int): Minimum number of words per cluster.
+     |      max_dist (float): The maximum cophenetic distance on the dendrogram to form clusters.
+     |      linkage_method (str): The linkage method for hierarchical clustering.
+     |      top_k (int): Number of top categories to extract.
+     |      model_name (str): The name of the sentence-transformers model.
+     |      sim_threshold (float): The similarity threshold for clustering.
+     |  
+     |  Method resolution order:
+     |      CosineStrategy
+     |      ExtractionStrategy
+     |      abc.ABC
+     |      builtins.object
+     |  
+     |  Methods defined here:
+     |  
+     |  __init__(self, semantic_filter=None, word_count_threshold=10, max_dist=0.2, linkage_method='ward', top_k=3, model_name='sentence-transformers/all-MiniLM-L6-v2', sim_threshold=0.3, **kwargs)
+     |      Initialize the strategy with clustering parameters.
+     |      
+     |      Args:
+     |          semantic_filter (str): A keyword filter for document filtering.
+     |          word_count_threshold (int): Minimum number of words per cluster.
+     |          max_dist (float): The maximum cophenetic distance on the dendrogram to form clusters.
+     |          linkage_method (str): The linkage method for hierarchical clustering.
+     |          top_k (int): Number of top categories to extract.
+     |  
+     |  extract(self, url: str, html: str, *q, **kwargs) -> List[Dict[str, Any]]
+     |      Extract clusters from HTML content using hierarchical clustering.
+     |      
+     |      Args:
+     |          url (str): The URL of the webpage.
+     |          html (str): The HTML content of the webpage.
+     |      
+     |      Returns:
+     |          List[Dict[str, Any]]: A list of processed JSON blocks.
+     |  
+     |  filter_clusters_by_word_count(self, clusters: Dict[int, List[str]]) -> Dict[int, List[str]]
+     |      Filter clusters to remove those with a word count below the threshold.
+     |      
+     |      Args:
+     |          clusters (Dict[int, List[str]]): Dictionary of clusters.
+     |      
+     |      Returns:
+     |          Dict[int, List[str]]: Filtered dictionary of clusters.
+     |  
+     |  filter_documents_embeddings(self, documents: List[str], semantic_filter: str, at_least_k: int = 20) -> List[str]
+     |      Filter and sort documents based on the cosine similarity of their embeddings with the semantic_filter embedding.
+     |      
+     |      Args:
+     |          documents (List[str]): A list of document texts.
+     |          semantic_filter (str): A keyword filter for document filtering.
+     |          at_least_k (int): The minimum number of documents to return.
+     |      
+     |      Returns:
+     |          List[str]: A list of filtered and sorted document texts.
+     |  
+     |  get_embeddings(self, sentences: List[str], batch_size=None, bypass_buffer=False)
+     |      Get BERT embeddings for a list of sentences.
+     |      
+     |      Args:
+     |          sentences (List[str]): A list of text chunks (sentences).
+     |      
+     |      Returns:
+     |          NumPy array of embeddings.
+     |  
+     |  hierarchical_clustering(self, sentences: List[str], embeddings=None)
+     |      Perform hierarchical clustering on sentences and return cluster labels.
+     |      
+     |      Args:
+     |          sentences (List[str]): A list of text chunks (sentences).
+     |      
+     |      Returns:
+     |          NumPy array of cluster labels.
+     |  
+     |  run(self, url: str, sections: List[str], *q, **kwargs) -> List[Dict[str, Any]]
+     |      Process sections using hierarchical clustering.
+     |      
+     |      Args:
+     |          url (str): The URL of the webpage.
+     |          sections (List[str]): List of sections (strings) to process.
+     |      
+     |      Returns:
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data and other attributes defined here:
+     |  
+     |  __abstractmethods__ = frozenset()
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data descriptors inherited from ExtractionStrategy:
+     |  
+     |  __dict__
+     |      dictionary for instance variables (if defined)
+     |  
+     |  __weakref__
+     |      list of weak references to the object (if defined)
+    
+    class CrawlResult(pydantic.main.BaseModel)
+     |  CrawlResult(*, url: str, html: str, success: bool, cleaned_html: Optional[str] = None, media: Dict[str, List[Dict]] = {}, links: Dict[str, List[Dict]] = {}, downloaded_files: Optional[List[str]] = None, screenshot: Optional[str] = None, pdf: Optional[bytes] = None, markdown: Union[str, crawl4ai.models.MarkdownGenerationResult, NoneType] = None, markdown_v2: Optional[crawl4ai.models.MarkdownGenerationResult] = None, fit_markdown: Optional[str] = None, fit_html: Optional[str] = None, extracted_content: Optional[str] = None, metadata: Optional[dict] = None, error_message: Optional[str] = None, session_id: Optional[str] = None, response_headers: Optional[dict] = None, status_code: Optional[int] = None, ssl_certificate: Optional[crawl4ai.ssl_certificate.SSLCertificate] = None, dispatch_result: Optional[crawl4ai.models.DispatchResult] = None, redirected_url: Optional[str] = None) -> None
+     |  
+     |  Method resolution order:
+     |      CrawlResult
+     |      pydantic.main.BaseModel
+     |      builtins.object
+     |  
+     |  Data descriptors defined here:
+     |  
+     |  __weakref__
+     |      list of weak references to the object (if defined)
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data and other attributes defined here:
+     |  
+     |  Config = <class 'crawl4ai.models.CrawlResult.Config'>
+     |  
+     |  __abstractmethods__ = frozenset()
+     |  
+     |  __annotations__ = {'cleaned_html': typing.Optional[str], 'dispatch_res...
+     |  
+     |  __class_vars__ = set()
+     |  
+     |  __private_attributes__ = {}
+     |  
+     |  __pydantic_complete__ = True
+     |  
+     |  __pydantic_computed_fields__ = {}
+     |  
+     |  __pydantic_core_schema__ = {'definitions': [{'cls': <class 'crawl4ai.m...
+     |  
+     |  __pydantic_custom_init__ = False
+     |  
+     |  __pydantic_decorators__ = DecoratorInfos(validators={}, field_validato...
+     |  
+     |  __pydantic_fields__ = {'cleaned_html': FieldInfo(annotation=Union[str,...
+     |  
+     |  __pydantic_generic_metadata__ = {'args': (), 'origin': None, 'paramete...
+     |  
+     |  __pydantic_parent_namespace__ = None
+     |  
+     |  __pydantic_post_init__ = None
+     |  
+     |  __pydantic_serializer__ = SchemaSerializer(serializer=Model(
+     |      Model...
+     |  
+     |  __pydantic_validator__ = SchemaValidator(title="CrawlResult", validato...
+     |  
+     |  __signature__ = <Signature (*, url: str, html: str, success: boo...e, ...
+     |  
+     |  model_config = {'arbitrary_types_allowed': True}
+     |  
+     |  ----------------------------------------------------------------------
+     |  Methods inherited from pydantic.main.BaseModel:
+     |  
+     |  __copy__(self) -> 'Self'
+     |      Returns a shallow copy of the model.
+     |  
+     |  __deepcopy__(self, memo: 'dict[int, Any] | None' = None) -> 'Self'
+     |      Returns a deep copy of the model.
+     |  
+     |  __delattr__(self, item: 'str') -> 'Any'
+     |      Implement delattr(self, name).
+     |  
+     |  __eq__(self, other: 'Any') -> 'bool'
+     |      Return self==value.
+     |  
+     |  __getattr__(self, item: 'str') -> 'Any'
+     |  
+     |  __getstate__(self) -> 'dict[Any, Any]'
+     |  
+     |  __init__(self, /, **data: 'Any') -> 'None'
+     |      Create a new model by parsing and validating input data from keyword arguments.
+     |      
+     |      Raises [`ValidationError`][pydantic_core.ValidationError] if the input data cannot be
+     |      validated to form a valid model.
+     |      
+     |      `self` is explicitly positional-only to allow `self` as a field name.
+     |  
+     |  __iter__(self) -> 'TupleGenerator'
+     |      So `dict(model)` works.
+     |  
+     |  __pretty__(self, fmt: 'typing.Callable[[Any], Any]', **kwargs: 'Any') -> 'typing.Generator[Any, None, None]'
+     |      Used by devtools (https://python-devtools.helpmanual.io/) to pretty print objects.
+     |  
+     |  __replace__(self, **changes: 'Any') -> 'Self'
+     |      # Because we make use of `@dataclass_transform()`, `__replace__` is already synthesized by
+     |      # type checkers, so we define the implementation in this `if not TYPE_CHECKING:` block:
+     |  
+     |  __repr__(self) -> 'str'
+     |      Return repr(self).
+     |  
+     |  __repr_args__(self) -> '_repr.ReprArgs'
+     |  
+     |  __repr_name__(self) -> 'str'
+     |      Name of the instance's class, used in __repr__.
+     |  
+     |  __repr_recursion__(self, object: 'Any') -> 'str'
+     |      Returns the string representation of a recursive object.
+     |  
+     |  __repr_str__(self, join_str: 'str') -> 'str'
+     |  
+     |  __rich_repr__(self) -> 'RichReprResult'
+     |      Used by Rich (https://rich.readthedocs.io/en/stable/pretty.html) to pretty print objects.
+     |  
+     |  __setattr__(self, name: 'str', value: 'Any') -> 'None'
+     |      Implement setattr(self, name, value).
+     |  
+     |  __setstate__(self, state: 'dict[Any, Any]') -> 'None'
+     |  
+     |  __str__(self) -> 'str'
+     |      Return str(self).
+     |  
+     |  copy(self, *, include: 'AbstractSetIntStr | MappingIntStrAny | None' = None, exclude: 'AbstractSetIntStr | MappingIntStrAny | None' = None, update: 'Dict[str, Any] | None' = None, deep: 'bool' = False) -> 'Self'
+     |      Returns a copy of the model.
+     |      
+     |      !!! warning "Deprecated"
+     |          This method is now deprecated; use `model_copy` instead.
+     |      
+     |      If you need `include` or `exclude`, use:
+     |      
+     |      ```python {test="skip" lint="skip"}
+     |      data = self.model_dump(include=include, exclude=exclude, round_trip=True)
+     |      data = {**data, **(update or {})}
+     |      copied = self.model_validate(data)
+     |      ```
+     |      
+     |      Args:
+     |          include: Optional set or mapping specifying which fields to include in the copied model.
+     |          exclude: Optional set or mapping specifying which fields to exclude in the copied model.
+     |          update: Optional dictionary of field-value pairs to override field values in the copied model.
+     |          deep: If True, the values of fields that are Pydantic models will be deep-copied.
+     |      
+     |      Returns:
+     |          A copy of the model with included, excluded and updated fields as specified.
+     |  
+     |  dict(self, *, include: 'IncEx | None' = None, exclude: 'IncEx | None' = None, by_alias: 'bool' = False, exclude_unset: 'bool' = False, exclude_defaults: 'bool' = False, exclude_none: 'bool' = False) -> 'Dict[str, Any]'
+     |  
+     |  json(self, *, include: 'IncEx | None' = None, exclude: 'IncEx | None' = None, by_alias: 'bool' = False, exclude_unset: 'bool' = False, exclude_defaults: 'bool' = False, exclude_none: 'bool' = False, encoder: 'Callable[[Any], Any] | None' = PydanticUndefined, models_as_dict: 'bool' = PydanticUndefined, **dumps_kwargs: 'Any') -> 'str'
+     |  
+     |  model_copy(self, *, update: 'Mapping[str, Any] | None' = None, deep: 'bool' = False) -> 'Self'
+     |      Usage docs: https://docs.pydantic.dev/2.10/concepts/serialization/#model_copy
+     |      
+     |      Returns a copy of the model.
+     |      
+     |      Args:
+     |          update: Values to change/add in the new model. Note: the data is not validated
+     |              before creating the new model. You should trust this data.
+     |          deep: Set to `True` to make a deep copy of the model.
+     |      
+     |      Returns:
+     |          New model instance.
+     |  
+     |  model_dump(self, *, mode: "Literal['json', 'python'] | str" = 'python', include: 'IncEx | None' = None, exclude: 'IncEx | None' = None, context: 'Any | None' = None, by_alias: 'bool' = False, exclude_unset: 'bool' = False, exclude_defaults: 'bool' = False, exclude_none: 'bool' = False, round_trip: 'bool' = False, warnings: "bool | Literal['none', 'warn', 'error']" = True, serialize_as_any: 'bool' = False) -> 'dict[str, Any]'
+     |      Usage docs: https://docs.pydantic.dev/2.10/concepts/serialization/#modelmodel_dump
+     |      
+     |      Generate a dictionary representation of the model, optionally specifying which fields to include or exclude.
+     |      
+     |      Args:
+     |          mode: The mode in which `to_python` should run.
+     |              If mode is 'json', the output will only contain JSON serializable types.
+     |              If mode is 'python', the output may contain non-JSON-serializable Python objects.
+     |          include: A set of fields to include in the output.
+     |          exclude: A set of fields to exclude from the output.
+     |          context: Additional context to pass to the serializer.
+     |          by_alias: Whether to use the field's alias in the dictionary key if defined.
+     |          exclude_unset: Whether to exclude fields that have not been explicitly set.
+     |          exclude_defaults: Whether to exclude fields that are set to their default value.
+     |          exclude_none: Whether to exclude fields that have a value of `None`.
+     |          round_trip: If True, dumped values should be valid as input for non-idempotent types such as Json[T].
+     |          warnings: How to handle serialization errors. False/"none" ignores them, True/"warn" logs errors,
+     |              "error" raises a [`PydanticSerializationError`][pydantic_core.PydanticSerializationError].
+     |          serialize_as_any: Whether to serialize fields with duck-typing serialization behavior.
+     |      
+     |      Returns:
+     |          A dictionary representation of the model.
+     |  
+     |  model_dump_json(self, *, indent: 'int | None' = None, include: 'IncEx | None' = None, exclude: 'IncEx | None' = None, context: 'Any | None' = None, by_alias: 'bool' = False, exclude_unset: 'bool' = False, exclude_defaults: 'bool' = False, exclude_none: 'bool' = False, round_trip: 'bool' = False, warnings: "bool | Literal['none', 'warn', 'error']" = True, serialize_as_any: 'bool' = False) -> 'str'
+     |      Usage docs: https://docs.pydantic.dev/2.10/concepts/serialization/#modelmodel_dump_json
+     |      
+     |      Generates a JSON representation of the model using Pydantic's `to_json` method.
+     |      
+     |      Args:
+     |          indent: Indentation to use in the JSON output. If None is passed, the output will be compact.
+     |          include: Field(s) to include in the JSON output.
+     |          exclude: Field(s) to exclude from the JSON output.
+     |          context: Additional context to pass to the serializer.
+     |          by_alias: Whether to serialize using field aliases.
+     |          exclude_unset: Whether to exclude fields that have not been explicitly set.
+     |          exclude_defaults: Whether to exclude fields that are set to their default value.
+     |          exclude_none: Whether to exclude fields that have a value of `None`.
+     |          round_trip: If True, dumped values should be valid as input for non-idempotent types such as Json[T].
+     |          warnings: How to handle serialization errors. False/"none" ignores them, True/"warn" logs errors,
+     |              "error" raises a [`PydanticSerializationError`][pydantic_core.PydanticSerializationError].
+     |          serialize_as_any: Whether to serialize fields with duck-typing serialization behavior.
+     |      
+     |      Returns:
+     |          A JSON string representation of the model.
+     |  
+     |  model_post_init(self, _BaseModel__context: 'Any') -> 'None'
+     |      Override this method to perform additional initialization after `__init__` and `model_construct`.
+     |      This is useful if you want to do some validation that requires the entire model to be initialized.
+     |  
+     |  ----------------------------------------------------------------------
+     |  Class methods inherited from pydantic.main.BaseModel:
+     |  
+     |  __class_getitem__(typevar_values: 'type[Any] | tuple[type[Any], ...]') -> 'type[BaseModel] | _forward_ref.PydanticRecursiveRef' from pydantic._internal._model_construction.ModelMetaclass
+     |  
+     |  __get_pydantic_core_schema__(source: 'type[BaseModel]', handler: 'GetCoreSchemaHandler', /) -> 'CoreSchema' from pydantic._internal._model_construction.ModelMetaclass
+     |      Hook into generating the model's CoreSchema.
+     |      
+     |      Args:
+     |          source: The class we are generating a schema for.
+     |              This will generally be the same as the `cls` argument if this is a classmethod.
+     |          handler: A callable that calls into Pydantic's internal CoreSchema generation logic.
+     |      
+     |      Returns:
+     |          A `pydantic-core` `CoreSchema`.
+     |  
+     |  __get_pydantic_json_schema__(core_schema: 'CoreSchema', handler: 'GetJsonSchemaHandler', /) -> 'JsonSchemaValue' from pydantic._internal._model_construction.ModelMetaclass
+     |      Hook into generating the model's JSON schema.
+     |      
+     |      Args:
+     |          core_schema: A `pydantic-core` CoreSchema.
+     |              You can ignore this argument and call the handler with a new CoreSchema,
+     |              wrap this CoreSchema (`{'type': 'nullable', 'schema': current_schema}`),
+     |              or just call the handler with the original schema.
+     |          handler: Call into Pydantic's internal JSON schema generation.
+     |              This will raise a `pydantic.errors.PydanticInvalidForJsonSchema` if JSON schema
+     |              generation fails.
+     |              Since this gets called by `BaseModel.model_json_schema` you can override the
+     |              `schema_generator` argument to that function to change JSON schema generation globally
+     |              for a type.
+     |      
+     |      Returns:
+     |          A JSON schema, as a Python object.
+     |  
+     |  __pydantic_init_subclass__(**kwargs: 'Any') -> 'None' from pydantic._internal._model_construction.ModelMetaclass
+     |      This is intended to behave just like `__init_subclass__`, but is called by `ModelMetaclass`
+     |      only after the class is actually fully initialized. In particular, attributes like `model_fields` will
+     |      be present when this is called.
+     |      
+     |      This is necessary because `__init_subclass__` will always be called by `type.__new__`,
+     |      and it would require a prohibitively large refactor to the `ModelMetaclass` to ensure that
+     |      `type.__new__` was called in such a manner that the class would already be sufficiently initialized.
+     |      
+     |      This will receive the same `kwargs` that would be passed to the standard `__init_subclass__`, namely,
+     |      any kwargs passed to the class definition that aren't used internally by pydantic.
+     |      
+     |      Args:
+     |          **kwargs: Any keyword arguments passed to the class definition that aren't used internally
+     |              by pydantic.
+     |  
+     |  construct(_fields_set: 'set[str] | None' = None, **values: 'Any') -> 'Self' from pydantic._internal._model_construction.ModelMetaclass
+     |  
+     |  from_orm(obj: 'Any') -> 'Self' from pydantic._internal._model_construction.ModelMetaclass
+     |  
+     |  model_construct(_fields_set: 'set[str] | None' = None, **values: 'Any') -> 'Self' from pydantic._internal._model_construction.ModelMetaclass
+     |      Creates a new instance of the `Model` class with validated data.
+     |      
+     |      Creates a new model setting `__dict__` and `__pydantic_fields_set__` from trusted or pre-validated data.
+     |      Default values are respected, but no other validation is performed.
+     |      
+     |      !!! note
+     |          `model_construct()` generally respects the `model_config.extra` setting on the provided model.
+     |          That is, if `model_config.extra == 'allow'`, then all extra passed values are added to the model instance's `__dict__`
+     |          and `__pydantic_extra__` fields. If `model_config.extra == 'ignore'` (the default), then all extra passed values are ignored.
+     |          Because no validation is performed with a call to `model_construct()`, having `model_config.extra == 'forbid'` does not result in
+     |          an error if extra values are passed, but they will be ignored.
+     |      
+     |      Args:
+     |          _fields_set: A set of field names that were originally explicitly set during instantiation. If provided,
+     |              this is directly used for the [`model_fields_set`][pydantic.BaseModel.model_fields_set] attribute.
+     |              Otherwise, the field names from the `values` argument will be used.
+     |          values: Trusted or pre-validated data dictionary.
+     |      
+     |      Returns:
+     |          A new instance of the `Model` class with validated data.
+     |  
+     |  model_json_schema(by_alias: 'bool' = True, ref_template: 'str' = '#/$defs/{model}', schema_generator: 'type[GenerateJsonSchema]' = <class 'pydantic.json_schema.GenerateJsonSchema'>, mode: 'JsonSchemaMode' = 'validation') -> 'dict[str, Any]' from pydantic._internal._model_construction.ModelMetaclass
+     |      Generates a JSON schema for a model class.
+     |      
+     |      Args:
+     |          by_alias: Whether to use attribute aliases or not.
+     |          ref_template: The reference template.
+     |          schema_generator: To override the logic used to generate the JSON schema, as a subclass of
+     |              `GenerateJsonSchema` with your desired modifications
+     |          mode: The mode in which to generate the schema.
+     |      
+     |      Returns:
+     |          The JSON schema for the given model class.
+     |  
+     |  model_parametrized_name(params: 'tuple[type[Any], ...]') -> 'str' from pydantic._internal._model_construction.ModelMetaclass
+     |      Compute the class name for parametrizations of generic classes.
+     |      
+     |      This method can be overridden to achieve a custom naming scheme for generic BaseModels.
+     |      
+     |      Args:
+     |          params: Tuple of types of the class. Given a generic class
+     |              `Model` with 2 type variables and a concrete model `Model[str, int]`,
+     |              the value `(str, int)` would be passed to `params`.
+     |      
+     |      Returns:
+     |          String representing the new class where `params` are passed to `cls` as type variables.
+     |      
+     |      Raises:
+     |          TypeError: Raised when trying to generate concrete names for non-generic models.
+     |  
+     |  model_rebuild(*, force: 'bool' = False, raise_errors: 'bool' = True, _parent_namespace_depth: 'int' = 2, _types_namespace: 'MappingNamespace | None' = None) -> 'bool | None' from pydantic._internal._model_construction.ModelMetaclass
+     |      Try to rebuild the pydantic-core schema for the model.
+     |      
+     |      This may be necessary when one of the annotations is a ForwardRef which could not be resolved during
+     |      the initial attempt to build the schema, and automatic rebuilding fails.
+     |      
+     |      Args:
+     |          force: Whether to force the rebuilding of the model schema, defaults to `False`.
+     |          raise_errors: Whether to raise errors, defaults to `True`.
+     |          _parent_namespace_depth: The depth level of the parent namespace, defaults to 2.
+     |          _types_namespace: The types namespace, defaults to `None`.
+     |      
+     |      Returns:
+     |          Returns `None` if the schema is already "complete" and rebuilding was not required.
+     |          If rebuilding _was_ required, returns `True` if rebuilding was successful, otherwise `False`.
+     |  
+     |  model_validate(obj: 'Any', *, strict: 'bool | None' = None, from_attributes: 'bool | None' = None, context: 'Any | None' = None) -> 'Self' from pydantic._internal._model_construction.ModelMetaclass
+     |      Validate a pydantic model instance.
+     |      
+     |      Args:
+     |          obj: The object to validate.
+     |          strict: Whether to enforce types strictly.
+     |          from_attributes: Whether to extract data from object attributes.
+     |          context: Additional context to pass to the validator.
+     |      
+     |      Raises:
+     |          ValidationError: If the object could not be validated.
+     |      
+     |      Returns:
+     |          The validated model instance.
+     |  
+     |  model_validate_json(json_data: 'str | bytes | bytearray', *, strict: 'bool | None' = None, context: 'Any | None' = None) -> 'Self' from pydantic._internal._model_construction.ModelMetaclass
+     |      Usage docs: https://docs.pydantic.dev/2.10/concepts/json/#json-parsing
+     |      
+     |      Validate the given JSON data against the Pydantic model.
+     |      
+     |      Args:
+     |          json_data: The JSON data to validate.
+     |          strict: Whether to enforce types strictly.
+     |          context: Extra variables to pass to the validator.
+     |      
+     |      Returns:
+     |          The validated Pydantic model.
+     |      
+     |      Raises:
+     |          ValidationError: If `json_data` is not a JSON string or the object could not be validated.
+     |  
+     |  model_validate_strings(obj: 'Any', *, strict: 'bool | None' = None, context: 'Any | None' = None) -> 'Self' from pydantic._internal._model_construction.ModelMetaclass
+     |      Validate the given object with string data against the Pydantic model.
+     |      
+     |      Args:
+     |          obj: The object containing string data to validate.
+     |          strict: Whether to enforce types strictly.
+     |          context: Extra variables to pass to the validator.
+     |      
+     |      Returns:
+     |          The validated Pydantic model.
+     |  
+     |  parse_file(path: 'str | Path', *, content_type: 'str | None' = None, encoding: 'str' = 'utf8', proto: 'DeprecatedParseProtocol | None' = None, allow_pickle: 'bool' = False) -> 'Self' from pydantic._internal._model_construction.ModelMetaclass
+     |  
+     |  parse_obj(obj: 'Any') -> 'Self' from pydantic._internal._model_construction.ModelMetaclass
+     |  
+     |  parse_raw(b: 'str | bytes', *, content_type: 'str | None' = None, encoding: 'str' = 'utf8', proto: 'DeprecatedParseProtocol | None' = None, allow_pickle: 'bool' = False) -> 'Self' from pydantic._internal._model_construction.ModelMetaclass
+     |  
+     |  schema(by_alias: 'bool' = True, ref_template: 'str' = '#/$defs/{model}') -> 'Dict[str, Any]' from pydantic._internal._model_construction.ModelMetaclass
+     |  
+     |  schema_json(*, by_alias: 'bool' = True, ref_template: 'str' = '#/$defs/{model}', **dumps_kwargs: 'Any') -> 'str' from pydantic._internal._model_construction.ModelMetaclass
+     |  
+     |  update_forward_refs(**localns: 'Any') -> 'None' from pydantic._internal._model_construction.ModelMetaclass
+     |  
+     |  validate(value: 'Any') -> 'Self' from pydantic._internal._model_construction.ModelMetaclass
+     |  
+     |  ----------------------------------------------------------------------
+     |  Readonly properties inherited from pydantic.main.BaseModel:
+     |  
+     |  __fields_set__
+     |  
+     |  model_computed_fields
+     |      Get metadata about the computed fields defined on the model.
+     |      
+     |      Deprecation warning: you should be getting this information from the model class, not from an instance.
+     |      In V3, this property will be removed from the `BaseModel` class.
+     |      
+     |      Returns:
+     |          A mapping of computed field names to [`ComputedFieldInfo`][pydantic.fields.ComputedFieldInfo] objects.
+     |  
+     |  model_extra
+     |      Get extra fields set during validation.
+     |      
+     |      Returns:
+     |          A dictionary of extra fields, or `None` if `config.extra` is not set to `"allow"`.
+     |  
+     |  model_fields
+     |      Get metadata about the fields defined on the model.
+     |      
+     |      Deprecation warning: you should be getting this information from the model class, not from an instance.
+     |      In V3, this property will be removed from the `BaseModel` class.
+     |      
+     |      Returns:
+     |          A mapping of field names to [`FieldInfo`][pydantic.fields.FieldInfo] objects.
+     |  
+     |  model_fields_set
+     |      Returns the set of fields that have been explicitly set on this model instance.
+     |      
+     |      Returns:
+     |          A set of strings representing the fields that have been set,
+     |              i.e. that were not filled from defaults.
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data descriptors inherited from pydantic.main.BaseModel:
+     |  
+     |  __dict__
+     |      dictionary for instance variables (if defined)
+     |  
+     |  __pydantic_extra__
+     |  
+     |  __pydantic_fields_set__
+     |  
+     |  __pydantic_private__
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data and other attributes inherited from pydantic.main.BaseModel:
+     |  
+     |  __hash__ = None
+     |  
+     |  __pydantic_root_model__ = False
+    
+    class CrawlerMonitor(builtins.object)
+     |  CrawlerMonitor(max_visible_rows: int = 15, display_mode: crawl4ai.models.DisplayMode = <DisplayMode.DETAILED: 'DETAILED'>)
+     |  
+     |  Methods defined here:
+     |  
+     |  __init__(self, max_visible_rows: int = 15, display_mode: crawl4ai.models.DisplayMode = <DisplayMode.DETAILED: 'DETAILED'>)
+     |      Initialize self.  See help(type(self)) for accurate signature.
+     |  
+     |  add_task(self, task_id: str, url: str)
+     |  
+     |  start(self)
+     |  
+     |  stop(self)
+     |  
+     |  update_task(self, task_id: str, **kwargs)
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data descriptors defined here:
+     |  
+     |  __dict__
+     |      dictionary for instance variables (if defined)
+     |  
+     |  __weakref__
+     |      list of weak references to the object (if defined)
+    
+    class CrawlerRunConfig(builtins.object)
+     |  CrawlerRunConfig(word_count_threshold: int = 1, extraction_strategy: crawl4ai.extraction_strategy.ExtractionStrategy = None, chunking_strategy: crawl4ai.chunking_strategy.ChunkingStrategy = <crawl4ai.chunking_strategy.RegexChunking object at 0x107785df0>, markdown_generator: crawl4ai.markdown_generation_strategy.MarkdownGenerationStrategy = None, content_filter: crawl4ai.content_filter_strategy.RelevantContentFilter = None, only_text: bool = False, css_selector: str = None, excluded_tags: list = None, excluded_selector: str = None, keep_data_attributes: bool = False, remove_forms: bool = False, prettiify: bool = False, parser_type: str = 'lxml', scraping_strategy: crawl4ai.content_scraping_strategy.ContentScrapingStrategy = None, proxy_config: dict = None, fetch_ssl_certificate: bool = False, cache_mode: crawl4ai.cache_context.CacheMode = None, session_id: str = None, bypass_cache: bool = False, disable_cache: bool = False, no_cache_read: bool = False, no_cache_write: bool = False, shared_data: dict = None, wait_until: str = 'domcontentloaded', page_timeout: int = 60000, wait_for: str = None, wait_for_images: bool = False, delay_before_return_html: float = 0.1, mean_delay: float = 0.1, max_range: float = 0.3, semaphore_count: int = 5, js_code: Union[str, List[str]] = None, js_only: bool = False, ignore_body_visibility: bool = True, scan_full_page: bool = False, scroll_delay: float = 0.2, process_iframes: bool = False, remove_overlay_elements: bool = False, simulate_user: bool = False, override_navigator: bool = False, magic: bool = False, adjust_viewport_to_content: bool = False, screenshot: bool = False, screenshot_wait_for: float = None, screenshot_height_threshold: int = 10000, pdf: bool = False, image_description_min_word_threshold: int = 1, image_score_threshold: int = 2, exclude_external_images: bool = False, exclude_social_media_domains: list = None, exclude_external_links: bool = False, exclude_social_media_links: bool = False, exclude_domains: list = None, verbose: bool = True, log_console: bool = False, stream: bool = False, url: str = None, check_robots_txt: bool = False, user_agent: str = None, user_agent_mode: str = None, user_agent_generator_config: dict = {})
+     |  
+     |  Configuration class for controlling how the crawler runs each crawl operation.
+     |  This includes parameters for content extraction, page manipulation, waiting conditions,
+     |  caching, and other runtime behaviors.
+     |  
+     |  This centralizes parameters that were previously scattered as kwargs to `arun()` and related methods.
+     |  By using this class, you have a single place to understand and adjust the crawling options.
+     |  
+     |  Attributes:
+     |      # Content Processing Parameters
+     |      word_count_threshold (int): Minimum word count threshold before processing content.
+     |                                  Default: MIN_WORD_THRESHOLD (typically 200).
+     |      extraction_strategy (ExtractionStrategy or None): Strategy to extract structured data from crawled pages.
+     |                                                        Default: None (NoExtractionStrategy is used if None).
+     |      chunking_strategy (ChunkingStrategy): Strategy to chunk content before extraction.
+     |                                            Default: RegexChunking().
+     |      markdown_generator (MarkdownGenerationStrategy): Strategy for generating markdown.
+     |                                                       Default: None.
+     |      content_filter (RelevantContentFilter or None): Optional filter to prune irrelevant content.
+     |                                                      Default: None.
+     |      only_text (bool): If True, attempt to extract text-only content where applicable.
+     |                        Default: False.
+     |      css_selector (str or None): CSS selector to extract a specific portion of the page.
+     |                                  Default: None.
+     |      excluded_tags (list of str or None): List of HTML tags to exclude from processing.
+     |                                           Default: None.
+     |      excluded_selector (str or None): CSS selector to exclude from processing.
+     |                                       Default: None.
+     |      keep_data_attributes (bool): If True, retain `data-*` attributes while removing unwanted attributes.
+     |                                   Default: False.
+     |      remove_forms (bool): If True, remove all `<form>` elements from the HTML.
+     |                           Default: False.
+     |      prettiify (bool): If True, apply `fast_format_html` to produce prettified HTML output.
+     |                        Default: False.
+     |      parser_type (str): Type of parser to use for HTML parsing.
+     |                         Default: "lxml".
+     |      scraping_strategy (ContentScrapingStrategy): Scraping strategy to use.
+     |                         Default: WebScrapingStrategy.
+     |      proxy_config (dict or None): Detailed proxy configuration, e.g. {"server": "...", "username": "..."}.
+     |                                   If None, no additional proxy config. Default: None.
+     |  
+     |      # Caching Parameters
+     |      cache_mode (CacheMode or None): Defines how caching is handled.
+     |                                      If None, defaults to CacheMode.ENABLED internally.
+     |                                      Default: None.
+     |      session_id (str or None): Optional session ID to persist the browser context and the created
+     |                                page instance. If the ID already exists, the crawler does not
+     |                                create a new page and uses the current page to preserve the state.
+     |      bypass_cache (bool): Legacy parameter, if True acts like CacheMode.BYPASS.
+     |                           Default: False.
+     |      disable_cache (bool): Legacy parameter, if True acts like CacheMode.DISABLED.
+     |                            Default: False.
+     |      no_cache_read (bool): Legacy parameter, if True acts like CacheMode.WRITE_ONLY.
+     |                            Default: False.
+     |      no_cache_write (bool): Legacy parameter, if True acts like CacheMode.READ_ONLY.
+     |                             Default: False.
+     |      shared_data (dict or None): Shared data to be passed between hooks.
+     |                                   Default: None.
+     |  
+     |      # Page Navigation and Timing Parameters
+     |      wait_until (str): The condition to wait for when navigating, e.g. "domcontentloaded".
+     |                        Default: "domcontentloaded".
+     |      page_timeout (int): Timeout in ms for page operations like navigation.
+     |                          Default: 60000 (60 seconds).
+     |      wait_for (str or None): A CSS selector or JS condition to wait for before extracting content.
+     |                              Default: None.
+     |      wait_for_images (bool): If True, wait for images to load before extracting content.
+     |                              Default: False.
+     |      delay_before_return_html (float): Delay in seconds before retrieving final HTML.
+     |                                        Default: 0.1.
+     |      mean_delay (float): Mean base delay between requests when calling arun_many.
+     |                          Default: 0.1.
+     |      max_range (float): Max random additional delay range for requests in arun_many.
+     |                         Default: 0.3.
+     |      semaphore_count (int): Number of concurrent operations allowed.
+     |                             Default: 5.
+     |  
+     |      # Page Interaction Parameters
+     |      js_code (str or list of str or None): JavaScript code/snippets to run on the page.
+     |                                            Default: None.
+     |      js_only (bool): If True, indicates subsequent calls are JS-driven updates, not full page loads.
+     |                      Default: False.
+     |      ignore_body_visibility (bool): If True, ignore whether the body is visible before proceeding.
+     |                                     Default: True.
+     |      scan_full_page (bool): If True, scroll through the entire page to load all content.
+     |                             Default: False.
+     |      scroll_delay (float): Delay in seconds between scroll steps if scan_full_page is True.
+     |                            Default: 0.2.
+     |      process_iframes (bool): If True, attempts to process and inline iframe content.
+     |                              Default: False.
+     |      remove_overlay_elements (bool): If True, remove overlays/popups before extracting HTML.
+     |                                      Default: False.
+     |      simulate_user (bool): If True, simulate user interactions (mouse moves, clicks) for anti-bot measures.
+     |                            Default: False.
+     |      override_navigator (bool): If True, overrides navigator properties for more human-like behavior.
+     |                                 Default: False.
+     |      magic (bool): If True, attempts automatic handling of overlays/popups.
+     |                    Default: False.
+     |      adjust_viewport_to_content (bool): If True, adjust viewport according to the page content dimensions.
+     |                                         Default: False.
+     |  
+     |      # Media Handling Parameters
+     |      screenshot (bool): Whether to take a screenshot after crawling.
+     |                         Default: False.
+     |      screenshot_wait_for (float or None): Additional wait time before taking a screenshot.
+     |                                           Default: None.
+     |      screenshot_height_threshold (int): Threshold for page height to decide screenshot strategy.
+     |                                         Default: SCREENSHOT_HEIGHT_TRESHOLD (from config, e.g. 20000).
+     |      pdf (bool): Whether to generate a PDF of the page.
+     |                  Default: False.
+     |      image_description_min_word_threshold (int): Minimum words for image description extraction.
+     |                                                  Default: IMAGE_DESCRIPTION_MIN_WORD_THRESHOLD (e.g., 50).
+     |      image_score_threshold (int): Minimum score threshold for processing an image.
+     |                                   Default: IMAGE_SCORE_THRESHOLD (e.g., 3).
+     |      exclude_external_images (bool): If True, exclude all external images from processing.
+     |                                       Default: False.
+     |  
+     |      # Link and Domain Handling Parameters
+     |      exclude_social_media_domains (list of str): List of domains to exclude for social media links.
+     |                                                  Default: SOCIAL_MEDIA_DOMAINS (from config).
+     |      exclude_external_links (bool): If True, exclude all external links from the results.
+     |                                     Default: False.
+     |      exclude_social_media_links (bool): If True, exclude links pointing to social media domains.
+     |                                         Default: False.
+     |      exclude_domains (list of str): List of specific domains to exclude from results.
+     |                                     Default: [].
+     |  
+     |      # Debugging and Logging Parameters
+     |      verbose (bool): Enable verbose logging.
+     |                      Default: True.
+     |      log_console (bool): If True, log console messages from the page.
+     |                          Default: False.
+     |  
+     |      # Streaming Parameters
+     |      stream (bool): If True, enables streaming of crawled URLs as they are processed when used with arun_many.
+     |                    Default: False.
+     |  
+     |      # Optional Parameters
+     |      stream (bool): If True, stream the page content as it is being loaded.
+     |      url: str = None  # This is not a compulsory parameter
+     |      check_robots_txt (bool): Whether to check robots.txt rules before crawling. Default: False
+     |      user_agent (str): Custom User-Agent string to use. Default: None
+     |      user_agent_mode (str or None): Mode for generating the user agent (e.g., "random"). If None, use the provided
+     |                                     user_agent as-is. Default: None.
+     |      user_agent_generator_config (dict or None): Configuration for user agent generation if user_agent_mode is set.
+     |                                                  Default: None.
+     |  
+     |  Methods defined here:
+     |  
+     |  __init__(self, word_count_threshold: int = 1, extraction_strategy: crawl4ai.extraction_strategy.ExtractionStrategy = None, chunking_strategy: crawl4ai.chunking_strategy.ChunkingStrategy = <crawl4ai.chunking_strategy.RegexChunking object at 0x107785df0>, markdown_generator: crawl4ai.markdown_generation_strategy.MarkdownGenerationStrategy = None, content_filter: crawl4ai.content_filter_strategy.RelevantContentFilter = None, only_text: bool = False, css_selector: str = None, excluded_tags: list = None, excluded_selector: str = None, keep_data_attributes: bool = False, remove_forms: bool = False, prettiify: bool = False, parser_type: str = 'lxml', scraping_strategy: crawl4ai.content_scraping_strategy.ContentScrapingStrategy = None, proxy_config: dict = None, fetch_ssl_certificate: bool = False, cache_mode: crawl4ai.cache_context.CacheMode = None, session_id: str = None, bypass_cache: bool = False, disable_cache: bool = False, no_cache_read: bool = False, no_cache_write: bool = False, shared_data: dict = None, wait_until: str = 'domcontentloaded', page_timeout: int = 60000, wait_for: str = None, wait_for_images: bool = False, delay_before_return_html: float = 0.1, mean_delay: float = 0.1, max_range: float = 0.3, semaphore_count: int = 5, js_code: Union[str, List[str]] = None, js_only: bool = False, ignore_body_visibility: bool = True, scan_full_page: bool = False, scroll_delay: float = 0.2, process_iframes: bool = False, remove_overlay_elements: bool = False, simulate_user: bool = False, override_navigator: bool = False, magic: bool = False, adjust_viewport_to_content: bool = False, screenshot: bool = False, screenshot_wait_for: float = None, screenshot_height_threshold: int = 10000, pdf: bool = False, image_description_min_word_threshold: int = 1, image_score_threshold: int = 2, exclude_external_images: bool = False, exclude_social_media_domains: list = None, exclude_external_links: bool = False, exclude_social_media_links: bool = False, exclude_domains: list = None, verbose: bool = True, log_console: bool = False, stream: bool = False, url: str = None, check_robots_txt: bool = False, user_agent: str = None, user_agent_mode: str = None, user_agent_generator_config: dict = {})
+     |      Initialize self.  See help(type(self)) for accurate signature.
+     |  
+     |  clone(self, **kwargs)
+     |      Create a copy of this configuration with updated values.
+     |      
+     |      Args:
+     |          **kwargs: Key-value pairs of configuration options to update
+     |          
+     |      Returns:
+     |          CrawlerRunConfig: A new instance with the specified updates
+     |          
+     |      Example:
+     |          ```python
+     |          # Create a new config with streaming enabled
+     |          stream_config = config.clone(stream=True)
+     |          
+     |          # Create a new config with multiple updates
+     |          new_config = config.clone(
+     |              stream=True,
+     |              cache_mode=CacheMode.BYPASS,
+     |              verbose=True
+     |          )
+     |          ```
+     |  
+     |  to_dict(self)
+     |      # Create a funciton returns dict of the object
+     |  
+     |  ----------------------------------------------------------------------
+     |  Static methods defined here:
+     |  
+     |  from_kwargs(kwargs: dict) -> 'CrawlerRunConfig'
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data descriptors defined here:
+     |  
+     |  __dict__
+     |      dictionary for instance variables (if defined)
+     |  
+     |  __weakref__
+     |      list of weak references to the object (if defined)
+    
+    class DefaultMarkdownGenerator(MarkdownGenerationStrategy)
+     |  DefaultMarkdownGenerator(content_filter: Optional[crawl4ai.content_filter_strategy.RelevantContentFilter] = None, options: Optional[Dict[str, Any]] = None)
+     |  
+     |  Default implementation of markdown generation strategy.
+     |  
+     |  How it works:
+     |  1. Generate raw markdown from cleaned HTML.
+     |  2. Convert links to citations.
+     |  3. Generate fit markdown if content filter is provided.
+     |  4. Return MarkdownGenerationResult.
+     |  
+     |  Args:
+     |      content_filter (Optional[RelevantContentFilter]): Content filter for generating fit markdown.
+     |      options (Optional[Dict[str, Any]]): Additional options for markdown generation. Defaults to None.
+     |  
+     |  Returns:
+     |      MarkdownGenerationResult: Result containing raw markdown, fit markdown, fit HTML, and references markdown.
+     |  
+     |  Method resolution order:
+     |      DefaultMarkdownGenerator
+     |      MarkdownGenerationStrategy
+     |      abc.ABC
+     |      builtins.object
+     |  
+     |  Methods defined here:
+     |  
+     |  __init__(self, content_filter: Optional[crawl4ai.content_filter_strategy.RelevantContentFilter] = None, options: Optional[Dict[str, Any]] = None)
+     |      Initialize self.  See help(type(self)) for accurate signature.
+     |  
+     |  convert_links_to_citations(self, markdown: str, base_url: str = '') -> Tuple[str, str]
+     |      Convert links in markdown to citations.
+     |      
+     |      How it works:
+     |      1. Find all links in the markdown.
+     |      2. Convert links to citations.
+     |      3. Return converted markdown and references markdown.
+     |      
+     |      Note:
+     |      This function uses a regex pattern to find links in markdown.
+     |      
+     |      Args:
+     |          markdown (str): Markdown text.
+     |          base_url (str): Base URL for URL joins.
+     |      
+     |      Returns:
+     |          Tuple[str, str]: Converted markdown and references markdown.
+     |  
+     |  generate_markdown(self, cleaned_html: str, base_url: str = '', html2text_options: Optional[Dict[str, Any]] = None, options: Optional[Dict[str, Any]] = None, content_filter: Optional[crawl4ai.content_filter_strategy.RelevantContentFilter] = None, citations: bool = True, **kwargs) -> crawl4ai.models.MarkdownGenerationResult
+     |      Generate markdown with citations from cleaned HTML.
+     |      
+     |      How it works:
+     |      1. Generate raw markdown from cleaned HTML.
+     |      2. Convert links to citations.
+     |      3. Generate fit markdown if content filter is provided.
+     |      4. Return MarkdownGenerationResult.
+     |      
+     |      Args:
+     |          cleaned_html (str): Cleaned HTML content.
+     |          base_url (str): Base URL for URL joins.
+     |          html2text_options (Optional[Dict[str, Any]]): HTML2Text options.
+     |          options (Optional[Dict[str, Any]]): Additional options for markdown generation.
+     |          content_filter (Optional[RelevantContentFilter]): Content filter for generating fit markdown.
+     |          citations (bool): Whether to generate citations.
+     |      
+     |      Returns:
+     |          MarkdownGenerationResult: Result containing raw markdown, fit markdown, fit HTML, and references markdown.
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data and other attributes defined here:
+     |  
+     |  __abstractmethods__ = frozenset()
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data descriptors inherited from MarkdownGenerationStrategy:
+     |  
+     |  __dict__
+     |      dictionary for instance variables (if defined)
+     |  
+     |  __weakref__
+     |      list of weak references to the object (if defined)
+    
+    class DisplayMode(enum.Enum)
+     |  DisplayMode(value, names=None, *, module=None, qualname=None, type=None, start=1)
+     |  
+     |  An enumeration.
+     |  
+     |  Method resolution order:
+     |      DisplayMode
+     |      enum.Enum
+     |      builtins.object
+     |  
+     |  Data and other attributes defined here:
+     |  
+     |  AGGREGATED = <DisplayMode.AGGREGATED: 'AGGREGATED'>
+     |  
+     |  DETAILED = <DisplayMode.DETAILED: 'DETAILED'>
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data descriptors inherited from enum.Enum:
+     |  
+     |  name
+     |      The name of the Enum member.
+     |  
+     |  value
+     |      The value of the Enum member.
+     |  
+     |  ----------------------------------------------------------------------
+     |  Readonly properties inherited from enum.EnumMeta:
+     |  
+     |  __members__
+     |      Returns a mapping of member name->value.
+     |      
+     |      This mapping lists all enum members, including aliases. Note that this
+     |      is a read-only view of the internal mapping.
+    
+    class ExtractionStrategy(abc.ABC)
+     |  ExtractionStrategy(input_format: str = 'markdown', **kwargs)
+     |  
+     |  Abstract base class for all extraction strategies.
+     |  
+     |  Method resolution order:
+     |      ExtractionStrategy
+     |      abc.ABC
+     |      builtins.object
+     |  
+     |  Methods defined here:
+     |  
+     |  __init__(self, input_format: str = 'markdown', **kwargs)
+     |      Initialize the extraction strategy.
+     |      
+     |      Args:
+     |          input_format: Content format to use for extraction.
+     |                       Options: "markdown" (default), "html", "fit_markdown"
+     |          **kwargs: Additional keyword arguments
+     |  
+     |  extract(self, url: str, html: str, *q, **kwargs) -> List[Dict[str, Any]]
+     |      Extract meaningful blocks or chunks from the given HTML.
+     |      
+     |      :param url: The URL of the webpage.
+     |      :param html: The HTML content of the webpage.
+     |      :return: A list of extracted blocks or chunks.
+     |  
+     |  run(self, url: str, sections: List[str], *q, **kwargs) -> List[Dict[str, Any]]
+     |      Process sections of text in parallel by default.
+     |      
+     |      :param url: The URL of the webpage.
+     |      :param sections: List of sections (strings) to process.
+     |      :return: A list of processed JSON blocks.
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data descriptors defined here:
+     |  
+     |  __dict__
+     |      dictionary for instance variables (if defined)
+     |  
+     |  __weakref__
+     |      list of weak references to the object (if defined)
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data and other attributes defined here:
+     |  
+     |  __abstractmethods__ = frozenset({'extract'})
+    
+    class JsonCssExtractionStrategy(JsonElementExtractionStrategy)
+     |  JsonCssExtractionStrategy(schema: Dict[str, Any], **kwargs)
+     |  
+     |  Concrete implementation of `JsonElementExtractionStrategy` using CSS selectors.
+     |  
+     |  How it works:
+     |  1. Parses HTML content with BeautifulSoup.
+     |  2. Selects elements using CSS selectors defined in the schema.
+     |  3. Extracts field data and applies transformations as defined.
+     |  
+     |  Attributes:
+     |      schema (Dict[str, Any]): The schema defining the extraction rules.
+     |      verbose (bool): Enables verbose logging for debugging purposes.
+     |  
+     |  Methods:
+     |      _parse_html(html_content): Parses HTML content into a BeautifulSoup object.
+     |      _get_base_elements(parsed_html, selector): Selects base elements using a CSS selector.
+     |      _get_elements(element, selector): Selects child elements using a CSS selector.
+     |      _get_element_text(element): Extracts text content from a BeautifulSoup element.
+     |      _get_element_html(element): Extracts the raw HTML content of a BeautifulSoup element.
+     |      _get_element_attribute(element, attribute): Retrieves an attribute value from a BeautifulSoup element.
+     |  
+     |  Method resolution order:
+     |      JsonCssExtractionStrategy
+     |      JsonElementExtractionStrategy
+     |      ExtractionStrategy
+     |      abc.ABC
+     |      builtins.object
+     |  
+     |  Methods defined here:
+     |  
+     |  __init__(self, schema: Dict[str, Any], **kwargs)
+     |      Initialize the JSON element extraction strategy with a schema.
+     |      
+     |      Args:
+     |          schema (Dict[str, Any]): The schema defining the extraction rules.
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data and other attributes defined here:
+     |  
+     |  __abstractmethods__ = frozenset()
+     |  
+     |  ----------------------------------------------------------------------
+     |  Methods inherited from JsonElementExtractionStrategy:
+     |  
+     |  extract(self, url: str, html_content: str, *q, **kwargs) -> List[Dict[str, Any]]
+     |      Extract structured data from HTML content.
+     |      
+     |      How it works:
+     |      1. Parses the HTML content using the `_parse_html` method.
+     |      2. Identifies base elements using the schema's base selector.
+     |      3. Extracts fields from each base element using `_extract_item`.
+     |      
+     |      Args:
+     |          url (str): The URL of the page being processed.
+     |          html_content (str): The raw HTML content to parse and extract.
+     |          *q: Additional positional arguments.
+     |          **kwargs: Additional keyword arguments for custom extraction.
+     |      
+     |      Returns:
+     |          List[Dict[str, Any]]: A list of extracted items, each represented as a dictionary.
+     |  
+     |  run(self, url: str, sections: List[str], *q, **kwargs) -> List[Dict[str, Any]]
+     |      Run the extraction strategy on a combined HTML content.
+     |      
+     |      How it works:
+     |      1. Combines multiple HTML sections using the `DEL` delimiter.
+     |      2. Calls the `extract` method with the combined HTML.
+     |      
+     |      Args:
+     |          url (str): The URL of the page being processed.
+     |          sections (List[str]): A list of HTML sections.
+     |          *q: Additional positional arguments.
+     |          **kwargs: Additional keyword arguments for custom extraction.
+     |      
+     |      Returns:
+     |          List[Dict[str, Any]]: A list of extracted items.
+     |  
+     |  ----------------------------------------------------------------------
+     |  Static methods inherited from JsonElementExtractionStrategy:
+     |  
+     |  generate_schema(html: str, schema_type: str = 'CSS', query: str = None, provider: str = 'gpt-4o', api_token: str = 'YOUR_API_TOKEN', **kwargs) -> dict
+     |      Generate extraction schema from HTML content and optional query.
+     |      
+     |      Args:
+     |          html (str): The HTML content to analyze
+     |          query (str, optional): Natural language description of what data to extract
+     |          provider (str): LLM provider to use 
+     |          api_token (str): API token for LLM provider
+     |          prompt (str, optional): Custom prompt template to use
+     |          **kwargs: Additional args passed to perform_completion_with_backoff
+     |          
+     |      Returns:
+     |          dict: Generated schema following the JsonElementExtractionStrategy format
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data and other attributes inherited from JsonElementExtractionStrategy:
+     |  
+     |  DEL = '\n'
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data descriptors inherited from ExtractionStrategy:
+     |  
+     |  __dict__
+     |      dictionary for instance variables (if defined)
+     |  
+     |  __weakref__
+     |      list of weak references to the object (if defined)
+    
+    class JsonXPathExtractionStrategy(JsonElementExtractionStrategy)
+     |  JsonXPathExtractionStrategy(schema: Dict[str, Any], **kwargs)
+     |  
+     |  Concrete implementation of `JsonElementExtractionStrategy` using XPath selectors.
+     |  
+     |  How it works:
+     |  1. Parses HTML content into an lxml tree.
+     |  2. Selects elements using XPath expressions.
+     |  3. Converts CSS selectors to XPath when needed.
+     |  
+     |  Attributes:
+     |      schema (Dict[str, Any]): The schema defining the extraction rules.
+     |      verbose (bool): Enables verbose logging for debugging purposes.
+     |  
+     |  Methods:
+     |      _parse_html(html_content): Parses HTML content into an lxml tree.
+     |      _get_base_elements(parsed_html, selector): Selects base elements using an XPath selector.
+     |      _css_to_xpath(css_selector): Converts a CSS selector to an XPath expression.
+     |      _get_elements(element, selector): Selects child elements using an XPath selector.
+     |      _get_element_text(element): Extracts text content from an lxml element.
+     |      _get_element_html(element): Extracts the raw HTML content of an lxml element.
+     |      _get_element_attribute(element, attribute): Retrieves an attribute value from an lxml element.
+     |  
+     |  Method resolution order:
+     |      JsonXPathExtractionStrategy
+     |      JsonElementExtractionStrategy
+     |      ExtractionStrategy
+     |      abc.ABC
+     |      builtins.object
+     |  
+     |  Methods defined here:
+     |  
+     |  __init__(self, schema: Dict[str, Any], **kwargs)
+     |      Initialize the JSON element extraction strategy with a schema.
+     |      
+     |      Args:
+     |          schema (Dict[str, Any]): The schema defining the extraction rules.
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data and other attributes defined here:
+     |  
+     |  __abstractmethods__ = frozenset()
+     |  
+     |  ----------------------------------------------------------------------
+     |  Methods inherited from JsonElementExtractionStrategy:
+     |  
+     |  extract(self, url: str, html_content: str, *q, **kwargs) -> List[Dict[str, Any]]
+     |      Extract structured data from HTML content.
+     |      
+     |      How it works:
+     |      1. Parses the HTML content using the `_parse_html` method.
+     |      2. Identifies base elements using the schema's base selector.
+     |      3. Extracts fields from each base element using `_extract_item`.
+     |      
+     |      Args:
+     |          url (str): The URL of the page being processed.
+     |          html_content (str): The raw HTML content to parse and extract.
+     |          *q: Additional positional arguments.
+     |          **kwargs: Additional keyword arguments for custom extraction.
+     |      
+     |      Returns:
+     |          List[Dict[str, Any]]: A list of extracted items, each represented as a dictionary.
+     |  
+     |  run(self, url: str, sections: List[str], *q, **kwargs) -> List[Dict[str, Any]]
+     |      Run the extraction strategy on a combined HTML content.
+     |      
+     |      How it works:
+     |      1. Combines multiple HTML sections using the `DEL` delimiter.
+     |      2. Calls the `extract` method with the combined HTML.
+     |      
+     |      Args:
+     |          url (str): The URL of the page being processed.
+     |          sections (List[str]): A list of HTML sections.
+     |          *q: Additional positional arguments.
+     |          **kwargs: Additional keyword arguments for custom extraction.
+     |      
+     |      Returns:
+     |          List[Dict[str, Any]]: A list of extracted items.
+     |  
+     |  ----------------------------------------------------------------------
+     |  Static methods inherited from JsonElementExtractionStrategy:
+     |  
+     |  generate_schema(html: str, schema_type: str = 'CSS', query: str = None, provider: str = 'gpt-4o', api_token: str = 'YOUR_API_TOKEN', **kwargs) -> dict
+     |      Generate extraction schema from HTML content and optional query.
+     |      
+     |      Args:
+     |          html (str): The HTML content to analyze
+     |          query (str, optional): Natural language description of what data to extract
+     |          provider (str): LLM provider to use 
+     |          api_token (str): API token for LLM provider
+     |          prompt (str, optional): Custom prompt template to use
+     |          **kwargs: Additional args passed to perform_completion_with_backoff
+     |          
+     |      Returns:
+     |          dict: Generated schema following the JsonElementExtractionStrategy format
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data and other attributes inherited from JsonElementExtractionStrategy:
+     |  
+     |  DEL = '\n'
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data descriptors inherited from ExtractionStrategy:
+     |  
+     |  __dict__
+     |      dictionary for instance variables (if defined)
+     |  
+     |  __weakref__
+     |      list of weak references to the object (if defined)
+    
+    class LLMContentFilter(RelevantContentFilter)
+     |  LLMContentFilter(provider: str = 'openai/gpt-4o-mini', api_token: Optional[str] = None, instruction: str = None, chunk_token_threshold: int = 1000000000, overlap_rate: float = 0.1, word_token_rate: float = 1.3, base_url: Optional[str] = None, api_base: Optional[str] = None, extra_args: Dict = None, verbose: bool = False, logger: Optional[crawl4ai.async_logger.AsyncLogger] = None)
+     |  
+     |  Content filtering using LLMs to generate relevant markdown.
+     |  
+     |  Method resolution order:
+     |      LLMContentFilter
+     |      RelevantContentFilter
+     |      abc.ABC
+     |      builtins.object
+     |  
+     |  Methods defined here:
+     |  
+     |  __init__(self, provider: str = 'openai/gpt-4o-mini', api_token: Optional[str] = None, instruction: str = None, chunk_token_threshold: int = 1000000000, overlap_rate: float = 0.1, word_token_rate: float = 1.3, base_url: Optional[str] = None, api_base: Optional[str] = None, extra_args: Dict = None, verbose: bool = False, logger: Optional[crawl4ai.async_logger.AsyncLogger] = None)
+     |      Initialize self.  See help(type(self)) for accurate signature.
+     |  
+     |  filter_content(self, html: str, ignore_cache: bool = False) -> List[str]
+     |      Abstract method to be implemented by specific filtering strategies
+     |  
+     |  show_usage(self) -> None
+     |      Print usage statistics
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data and other attributes defined here:
+     |  
+     |  __abstractmethods__ = frozenset()
+     |  
+     |  ----------------------------------------------------------------------
+     |  Methods inherited from RelevantContentFilter:
+     |  
+     |  clean_element(self, tag: bs4.element.Tag) -> str
+     |      Common method for cleaning HTML elements with minimal overhead
+     |  
+     |  extract_page_query(self, soup: bs4.BeautifulSoup, body: bs4.element.Tag) -> str
+     |      Common method to extract page metadata with fallbacks
+     |  
+     |  extract_text_chunks(self, body: bs4.element.Tag, min_word_threshold: int = None) -> List[Tuple[str, str]]
+     |      Extracts text chunks from a BeautifulSoup body element while preserving order.
+     |      Returns list of tuples (text, tag_name) for classification.
+     |      
+     |      Args:
+     |          body: BeautifulSoup Tag object representing the body element
+     |      
+     |      Returns:
+     |          List of (text, tag_name) tuples
+     |  
+     |  is_excluded(self, tag: bs4.element.Tag) -> bool
+     |      Common method for exclusion logic
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data descriptors inherited from RelevantContentFilter:
+     |  
+     |  __dict__
+     |      dictionary for instance variables (if defined)
+     |  
+     |  __weakref__
+     |      list of weak references to the object (if defined)
+    
+    class LLMExtractionStrategy(ExtractionStrategy)
+     |  LLMExtractionStrategy(provider: str = 'openai/gpt-4o-mini', api_token: Optional[str] = None, instruction: str = None, schema: Dict = None, extraction_type='block', **kwargs)
+     |  
+     |  A strategy that uses an LLM to extract meaningful content from the HTML.
+     |  
+     |  Attributes:
+     |      provider: The provider to use for extraction. It follows the format <provider_name>/<model_name>, e.g., "ollama/llama3.3".
+     |      api_token: The API token for the provider.
+     |      instruction: The instruction to use for the LLM model.
+     |      schema: Pydantic model schema for structured data.
+     |      extraction_type: "block" or "schema".
+     |      chunk_token_threshold: Maximum tokens per chunk.
+     |      overlap_rate: Overlap between chunks.
+     |      word_token_rate: Word to token conversion rate.
+     |      apply_chunking: Whether to apply chunking.
+     |      base_url: The base URL for the API request.
+     |      api_base: The base URL for the API request.
+     |      extra_args: Additional arguments for the API request, such as temprature, max_tokens, etc.
+     |      verbose: Whether to print verbose output.
+     |      usages: List of individual token usages.
+     |      total_usage: Accumulated token usage.
+     |  
+     |  Method resolution order:
+     |      LLMExtractionStrategy
+     |      ExtractionStrategy
+     |      abc.ABC
+     |      builtins.object
+     |  
+     |  Methods defined here:
+     |  
+     |  __init__(self, provider: str = 'openai/gpt-4o-mini', api_token: Optional[str] = None, instruction: str = None, schema: Dict = None, extraction_type='block', **kwargs)
+     |      Initialize the strategy with clustering parameters.
+     |      
+     |      Args:
+     |          provider: The provider to use for extraction. It follows the format <provider_name>/<model_name>, e.g., "ollama/llama3.3".
+     |          api_token: The API token for the provider.
+     |          instruction: The instruction to use for the LLM model.
+     |          schema: Pydantic model schema for structured data.
+     |          extraction_type: "block" or "schema".
+     |          chunk_token_threshold: Maximum tokens per chunk.
+     |          overlap_rate: Overlap between chunks.
+     |          word_token_rate: Word to token conversion rate.
+     |          apply_chunking: Whether to apply chunking.
+     |          base_url: The base URL for the API request.
+     |          api_base: The base URL for the API request.
+     |          extra_args: Additional arguments for the API request, such as temprature, max_tokens, etc.
+     |          verbose: Whether to print verbose output.
+     |          usages: List of individual token usages.
+     |          total_usage: Accumulated token usage.
+     |  
+     |  extract(self, url: str, ix: int, html: str) -> List[Dict[str, Any]]
+     |      Extract meaningful blocks or chunks from the given HTML using an LLM.
+     |      
+     |      How it works:
+     |      1. Construct a prompt with variables.
+     |      2. Make a request to the LLM using the prompt.
+     |      3. Parse the response and extract blocks or chunks.
+     |      
+     |      Args:
+     |          url: The URL of the webpage.
+     |          ix: Index of the block.
+     |          html: The HTML content of the webpage.
+     |      
+     |      Returns:
+     |          A list of extracted blocks or chunks.
+     |  
+     |  run(self, url: str, sections: List[str]) -> List[Dict[str, Any]]
+     |      Process sections sequentially with a delay for rate limiting issues, specifically for LLMExtractionStrategy.
+     |      
+     |      Args:
+     |          url: The URL of the webpage.
+     |          sections: List of sections (strings) to process.
+     |      
+     |      Returns:
+     |          A list of extracted blocks or chunks.
+     |  
+     |  show_usage(self) -> None
+     |      Print a detailed token usage report showing total and per-request usage.
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data and other attributes defined here:
+     |  
+     |  __abstractmethods__ = frozenset()
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data descriptors inherited from ExtractionStrategy:
+     |  
+     |  __dict__
+     |      dictionary for instance variables (if defined)
+     |  
+     |  __weakref__
+     |      list of weak references to the object (if defined)
+    
+    class LXMLWebScrapingStrategy(WebScrapingStrategy)
+     |  LXMLWebScrapingStrategy(logger=None)
+     |  
+     |  Method resolution order:
+     |      LXMLWebScrapingStrategy
+     |      WebScrapingStrategy
+     |      ContentScrapingStrategy
+     |      abc.ABC
+     |      builtins.object
+     |  
+     |  Methods defined here:
+     |  
+     |  __init__(self, logger=None)
+     |      Initialize self.  See help(type(self)) for accurate signature.
+     |  
+     |  find_closest_parent_with_useful_text(self, element: lxml.html.HtmlElement, **kwargs) -> Optional[str]
+     |      Find the closest parent with useful text.
+     |      
+     |      Args:
+     |          tag (Tag): The starting tag to search from.
+     |          **kwargs: Additional keyword arguments.
+     |      
+     |      Returns:
+     |          Tag: The closest parent with useful text, or None if not found.
+     |  
+     |  flatten_nested_elements(self, element: lxml.html.HtmlElement) -> lxml.html.HtmlElement
+     |      Flatten nested elements of the same type in LXML tree
+     |  
+     |  process_image(self, img: lxml.html.HtmlElement, url: str, index: int, total_images: int, **kwargs) -> Optional[List[Dict]]
+     |      Process an image element.
+     |      
+     |      How it works:
+     |      1. Check if the image has valid display and inside undesired html elements.
+     |      2. Score an image for it's usefulness.
+     |      3. Extract image file metadata to extract size and extension.
+     |      4. Generate a dictionary with the processed image information.
+     |      5. Return the processed image information.
+     |      
+     |      Args:
+     |          img (Tag): The image element to process.
+     |          url (str): The URL of the page containing the image.
+     |          index (int): The index of the image in the list of images.
+     |          total_images (int): The total number of images in the list.
+     |          **kwargs: Additional keyword arguments.
+     |      
+     |      Returns:
+     |          dict: A dictionary containing the processed image information.
+     |  
+     |  remove_empty_elements_fast(self, root, word_count_threshold=5)
+     |      Remove elements that fall below the desired word threshold in a single pass from the bottom up.
+     |      Skips non-element nodes like HtmlComment and bypasses certain tags that are allowed to have no content.
+     |  
+     |  remove_unwanted_attributes_fast(self, root: lxml.html.HtmlElement, important_attrs=None, keep_data_attributes=False) -> lxml.html.HtmlElement
+     |      Removes all attributes from each element (including root) except those in `important_attrs`.
+     |      If `keep_data_attributes=True`, also retain any attribute starting with 'data-'.
+     |      
+     |      Returns the same root element, mutated in-place, for fluent usage.
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data and other attributes defined here:
+     |  
+     |  __abstractmethods__ = frozenset()
+     |  
+     |  ----------------------------------------------------------------------
+     |  Methods inherited from WebScrapingStrategy:
+     |  
+     |  async ascrap(self, url: str, html: str, **kwargs) -> crawl4ai.models.ScrapingResult
+     |      Main entry point for asynchronous content scraping.
+     |      
+     |      Args:
+     |          url (str): The URL of the page to scrape.
+     |          html (str): The HTML content of the page.
+     |          **kwargs: Additional keyword arguments.
+     |      
+     |      Returns:
+     |          ScrapingResult: A structured result containing the scraped content.
+     |  
+     |  process_element(self, url, element: bs4.element.PageElement, **kwargs) -> Dict[str, Any]
+     |      Process an HTML element.
+     |      
+     |      How it works:
+     |      1. Check if the element is an image, video, or audio.
+     |      2. Extract the element's attributes and content.
+     |      3. Process the element based on its type.
+     |      4. Return the processed element information.
+     |      
+     |      Args:
+     |          url (str): The URL of the page containing the element.
+     |          element (Tag): The HTML element to process.
+     |          **kwargs: Additional keyword arguments.
+     |      
+     |      Returns:
+     |          dict: A dictionary containing the processed element information.
+     |  
+     |  remove_unwanted_attributes(self, element, important_attrs, keep_data_attributes=False)
+     |      Remove unwanted attributes from an HTML element.
+     |      
+     |      Args:
+     |          element (Tag): The HTML element to remove attributes from.
+     |          important_attrs (list): List of important attributes to keep.
+     |          keep_data_attributes (bool): Whether to keep data attributes.
+     |      
+     |      Returns:
+     |          None
+     |  
+     |  scrap(self, url: str, html: str, **kwargs) -> crawl4ai.models.ScrapingResult
+     |      Main entry point for content scraping.
+     |      
+     |      Args:
+     |          url (str): The URL of the page to scrape.
+     |          html (str): The HTML content of the page.
+     |          **kwargs: Additional keyword arguments.
+     |      
+     |      Returns:
+     |          ScrapingResult: A structured result containing the scraped content.
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data descriptors inherited from ContentScrapingStrategy:
+     |  
+     |  __dict__
+     |      dictionary for instance variables (if defined)
+     |  
+     |  __weakref__
+     |      list of weak references to the object (if defined)
+    
+    class MarkdownGenerationResult(pydantic.main.BaseModel)
+     |  MarkdownGenerationResult(*, raw_markdown: str, markdown_with_citations: str, references_markdown: str, fit_markdown: Optional[str] = None, fit_html: Optional[str] = None) -> None
+     |  
+     |  Method resolution order:
+     |      MarkdownGenerationResult
+     |      pydantic.main.BaseModel
+     |      builtins.object
+     |  
+     |  Data descriptors defined here:
+     |  
+     |  __weakref__
+     |      list of weak references to the object (if defined)
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data and other attributes defined here:
+     |  
+     |  __abstractmethods__ = frozenset()
+     |  
+     |  __annotations__ = {'fit_html': typing.Optional[str], 'fit_markdown': t...
+     |  
+     |  __class_vars__ = set()
+     |  
+     |  __private_attributes__ = {}
+     |  
+     |  __pydantic_complete__ = True
+     |  
+     |  __pydantic_computed_fields__ = {}
+     |  
+     |  __pydantic_core_schema__ = {'cls': <class 'crawl4ai.models.MarkdownGen...
+     |  
+     |  __pydantic_custom_init__ = False
+     |  
+     |  __pydantic_decorators__ = DecoratorInfos(validators={}, field_validato...
+     |  
+     |  __pydantic_fields__ = {'fit_html': FieldInfo(annotation=Union[str, Non...
+     |  
+     |  __pydantic_generic_metadata__ = {'args': (), 'origin': None, 'paramete...
+     |  
+     |  __pydantic_parent_namespace__ = None
+     |  
+     |  __pydantic_post_init__ = None
+     |  
+     |  __pydantic_serializer__ = SchemaSerializer(serializer=Model(
+     |      Model...
+     |  
+     |  __pydantic_validator__ = SchemaValidator(title="MarkdownGenerationResu...
+     |  
+     |  __signature__ = <Signature (*, raw_markdown: str, markdown_with_... = ...
+     |  
+     |  model_config = {}
+     |  
+     |  ----------------------------------------------------------------------
+     |  Methods inherited from pydantic.main.BaseModel:
+     |  
+     |  __copy__(self) -> 'Self'
+     |      Returns a shallow copy of the model.
+     |  
+     |  __deepcopy__(self, memo: 'dict[int, Any] | None' = None) -> 'Self'
+     |      Returns a deep copy of the model.
+     |  
+     |  __delattr__(self, item: 'str') -> 'Any'
+     |      Implement delattr(self, name).
+     |  
+     |  __eq__(self, other: 'Any') -> 'bool'
+     |      Return self==value.
+     |  
+     |  __getattr__(self, item: 'str') -> 'Any'
+     |  
+     |  __getstate__(self) -> 'dict[Any, Any]'
+     |  
+     |  __init__(self, /, **data: 'Any') -> 'None'
+     |      Create a new model by parsing and validating input data from keyword arguments.
+     |      
+     |      Raises [`ValidationError`][pydantic_core.ValidationError] if the input data cannot be
+     |      validated to form a valid model.
+     |      
+     |      `self` is explicitly positional-only to allow `self` as a field name.
+     |  
+     |  __iter__(self) -> 'TupleGenerator'
+     |      So `dict(model)` works.
+     |  
+     |  __pretty__(self, fmt: 'typing.Callable[[Any], Any]', **kwargs: 'Any') -> 'typing.Generator[Any, None, None]'
+     |      Used by devtools (https://python-devtools.helpmanual.io/) to pretty print objects.
+     |  
+     |  __replace__(self, **changes: 'Any') -> 'Self'
+     |      # Because we make use of `@dataclass_transform()`, `__replace__` is already synthesized by
+     |      # type checkers, so we define the implementation in this `if not TYPE_CHECKING:` block:
+     |  
+     |  __repr__(self) -> 'str'
+     |      Return repr(self).
+     |  
+     |  __repr_args__(self) -> '_repr.ReprArgs'
+     |  
+     |  __repr_name__(self) -> 'str'
+     |      Name of the instance's class, used in __repr__.
+     |  
+     |  __repr_recursion__(self, object: 'Any') -> 'str'
+     |      Returns the string representation of a recursive object.
+     |  
+     |  __repr_str__(self, join_str: 'str') -> 'str'
+     |  
+     |  __rich_repr__(self) -> 'RichReprResult'
+     |      Used by Rich (https://rich.readthedocs.io/en/stable/pretty.html) to pretty print objects.
+     |  
+     |  __setattr__(self, name: 'str', value: 'Any') -> 'None'
+     |      Implement setattr(self, name, value).
+     |  
+     |  __setstate__(self, state: 'dict[Any, Any]') -> 'None'
+     |  
+     |  __str__(self) -> 'str'
+     |      Return str(self).
+     |  
+     |  copy(self, *, include: 'AbstractSetIntStr | MappingIntStrAny | None' = None, exclude: 'AbstractSetIntStr | MappingIntStrAny | None' = None, update: 'Dict[str, Any] | None' = None, deep: 'bool' = False) -> 'Self'
+     |      Returns a copy of the model.
+     |      
+     |      !!! warning "Deprecated"
+     |          This method is now deprecated; use `model_copy` instead.
+     |      
+     |      If you need `include` or `exclude`, use:
+     |      
+     |      ```python {test="skip" lint="skip"}
+     |      data = self.model_dump(include=include, exclude=exclude, round_trip=True)
+     |      data = {**data, **(update or {})}
+     |      copied = self.model_validate(data)
+     |      ```
+     |      
+     |      Args:
+     |          include: Optional set or mapping specifying which fields to include in the copied model.
+     |          exclude: Optional set or mapping specifying which fields to exclude in the copied model.
+     |          update: Optional dictionary of field-value pairs to override field values in the copied model.
+     |          deep: If True, the values of fields that are Pydantic models will be deep-copied.
+     |      
+     |      Returns:
+     |          A copy of the model with included, excluded and updated fields as specified.
+     |  
+     |  dict(self, *, include: 'IncEx | None' = None, exclude: 'IncEx | None' = None, by_alias: 'bool' = False, exclude_unset: 'bool' = False, exclude_defaults: 'bool' = False, exclude_none: 'bool' = False) -> 'Dict[str, Any]'
+     |  
+     |  json(self, *, include: 'IncEx | None' = None, exclude: 'IncEx | None' = None, by_alias: 'bool' = False, exclude_unset: 'bool' = False, exclude_defaults: 'bool' = False, exclude_none: 'bool' = False, encoder: 'Callable[[Any], Any] | None' = PydanticUndefined, models_as_dict: 'bool' = PydanticUndefined, **dumps_kwargs: 'Any') -> 'str'
+     |  
+     |  model_copy(self, *, update: 'Mapping[str, Any] | None' = None, deep: 'bool' = False) -> 'Self'
+     |      Usage docs: https://docs.pydantic.dev/2.10/concepts/serialization/#model_copy
+     |      
+     |      Returns a copy of the model.
+     |      
+     |      Args:
+     |          update: Values to change/add in the new model. Note: the data is not validated
+     |              before creating the new model. You should trust this data.
+     |          deep: Set to `True` to make a deep copy of the model.
+     |      
+     |      Returns:
+     |          New model instance.
+     |  
+     |  model_dump(self, *, mode: "Literal['json', 'python'] | str" = 'python', include: 'IncEx | None' = None, exclude: 'IncEx | None' = None, context: 'Any | None' = None, by_alias: 'bool' = False, exclude_unset: 'bool' = False, exclude_defaults: 'bool' = False, exclude_none: 'bool' = False, round_trip: 'bool' = False, warnings: "bool | Literal['none', 'warn', 'error']" = True, serialize_as_any: 'bool' = False) -> 'dict[str, Any]'
+     |      Usage docs: https://docs.pydantic.dev/2.10/concepts/serialization/#modelmodel_dump
+     |      
+     |      Generate a dictionary representation of the model, optionally specifying which fields to include or exclude.
+     |      
+     |      Args:
+     |          mode: The mode in which `to_python` should run.
+     |              If mode is 'json', the output will only contain JSON serializable types.
+     |              If mode is 'python', the output may contain non-JSON-serializable Python objects.
+     |          include: A set of fields to include in the output.
+     |          exclude: A set of fields to exclude from the output.
+     |          context: Additional context to pass to the serializer.
+     |          by_alias: Whether to use the field's alias in the dictionary key if defined.
+     |          exclude_unset: Whether to exclude fields that have not been explicitly set.
+     |          exclude_defaults: Whether to exclude fields that are set to their default value.
+     |          exclude_none: Whether to exclude fields that have a value of `None`.
+     |          round_trip: If True, dumped values should be valid as input for non-idempotent types such as Json[T].
+     |          warnings: How to handle serialization errors. False/"none" ignores them, True/"warn" logs errors,
+     |              "error" raises a [`PydanticSerializationError`][pydantic_core.PydanticSerializationError].
+     |          serialize_as_any: Whether to serialize fields with duck-typing serialization behavior.
+     |      
+     |      Returns:
+     |          A dictionary representation of the model.
+     |  
+     |  model_dump_json(self, *, indent: 'int | None' = None, include: 'IncEx | None' = None, exclude: 'IncEx | None' = None, context: 'Any | None' = None, by_alias: 'bool' = False, exclude_unset: 'bool' = False, exclude_defaults: 'bool' = False, exclude_none: 'bool' = False, round_trip: 'bool' = False, warnings: "bool | Literal['none', 'warn', 'error']" = True, serialize_as_any: 'bool' = False) -> 'str'
+     |      Usage docs: https://docs.pydantic.dev/2.10/concepts/serialization/#modelmodel_dump_json
+     |      
+     |      Generates a JSON representation of the model using Pydantic's `to_json` method.
+     |      
+     |      Args:
+     |          indent: Indentation to use in the JSON output. If None is passed, the output will be compact.
+     |          include: Field(s) to include in the JSON output.
+     |          exclude: Field(s) to exclude from the JSON output.
+     |          context: Additional context to pass to the serializer.
+     |          by_alias: Whether to serialize using field aliases.
+     |          exclude_unset: Whether to exclude fields that have not been explicitly set.
+     |          exclude_defaults: Whether to exclude fields that are set to their default value.
+     |          exclude_none: Whether to exclude fields that have a value of `None`.
+     |          round_trip: If True, dumped values should be valid as input for non-idempotent types such as Json[T].
+     |          warnings: How to handle serialization errors. False/"none" ignores them, True/"warn" logs errors,
+     |              "error" raises a [`PydanticSerializationError`][pydantic_core.PydanticSerializationError].
+     |          serialize_as_any: Whether to serialize fields with duck-typing serialization behavior.
+     |      
+     |      Returns:
+     |          A JSON string representation of the model.
+     |  
+     |  model_post_init(self, _BaseModel__context: 'Any') -> 'None'
+     |      Override this method to perform additional initialization after `__init__` and `model_construct`.
+     |      This is useful if you want to do some validation that requires the entire model to be initialized.
+     |  
+     |  ----------------------------------------------------------------------
+     |  Class methods inherited from pydantic.main.BaseModel:
+     |  
+     |  __class_getitem__(typevar_values: 'type[Any] | tuple[type[Any], ...]') -> 'type[BaseModel] | _forward_ref.PydanticRecursiveRef' from pydantic._internal._model_construction.ModelMetaclass
+     |  
+     |  __get_pydantic_core_schema__(source: 'type[BaseModel]', handler: 'GetCoreSchemaHandler', /) -> 'CoreSchema' from pydantic._internal._model_construction.ModelMetaclass
+     |      Hook into generating the model's CoreSchema.
+     |      
+     |      Args:
+     |          source: The class we are generating a schema for.
+     |              This will generally be the same as the `cls` argument if this is a classmethod.
+     |          handler: A callable that calls into Pydantic's internal CoreSchema generation logic.
+     |      
+     |      Returns:
+     |          A `pydantic-core` `CoreSchema`.
+     |  
+     |  __get_pydantic_json_schema__(core_schema: 'CoreSchema', handler: 'GetJsonSchemaHandler', /) -> 'JsonSchemaValue' from pydantic._internal._model_construction.ModelMetaclass
+     |      Hook into generating the model's JSON schema.
+     |      
+     |      Args:
+     |          core_schema: A `pydantic-core` CoreSchema.
+     |              You can ignore this argument and call the handler with a new CoreSchema,
+     |              wrap this CoreSchema (`{'type': 'nullable', 'schema': current_schema}`),
+     |              or just call the handler with the original schema.
+     |          handler: Call into Pydantic's internal JSON schema generation.
+     |              This will raise a `pydantic.errors.PydanticInvalidForJsonSchema` if JSON schema
+     |              generation fails.
+     |              Since this gets called by `BaseModel.model_json_schema` you can override the
+     |              `schema_generator` argument to that function to change JSON schema generation globally
+     |              for a type.
+     |      
+     |      Returns:
+     |          A JSON schema, as a Python object.
+     |  
+     |  __pydantic_init_subclass__(**kwargs: 'Any') -> 'None' from pydantic._internal._model_construction.ModelMetaclass
+     |      This is intended to behave just like `__init_subclass__`, but is called by `ModelMetaclass`
+     |      only after the class is actually fully initialized. In particular, attributes like `model_fields` will
+     |      be present when this is called.
+     |      
+     |      This is necessary because `__init_subclass__` will always be called by `type.__new__`,
+     |      and it would require a prohibitively large refactor to the `ModelMetaclass` to ensure that
+     |      `type.__new__` was called in such a manner that the class would already be sufficiently initialized.
+     |      
+     |      This will receive the same `kwargs` that would be passed to the standard `__init_subclass__`, namely,
+     |      any kwargs passed to the class definition that aren't used internally by pydantic.
+     |      
+     |      Args:
+     |          **kwargs: Any keyword arguments passed to the class definition that aren't used internally
+     |              by pydantic.
+     |  
+     |  construct(_fields_set: 'set[str] | None' = None, **values: 'Any') -> 'Self' from pydantic._internal._model_construction.ModelMetaclass
+     |  
+     |  from_orm(obj: 'Any') -> 'Self' from pydantic._internal._model_construction.ModelMetaclass
+     |  
+     |  model_construct(_fields_set: 'set[str] | None' = None, **values: 'Any') -> 'Self' from pydantic._internal._model_construction.ModelMetaclass
+     |      Creates a new instance of the `Model` class with validated data.
+     |      
+     |      Creates a new model setting `__dict__` and `__pydantic_fields_set__` from trusted or pre-validated data.
+     |      Default values are respected, but no other validation is performed.
+     |      
+     |      !!! note
+     |          `model_construct()` generally respects the `model_config.extra` setting on the provided model.
+     |          That is, if `model_config.extra == 'allow'`, then all extra passed values are added to the model instance's `__dict__`
+     |          and `__pydantic_extra__` fields. If `model_config.extra == 'ignore'` (the default), then all extra passed values are ignored.
+     |          Because no validation is performed with a call to `model_construct()`, having `model_config.extra == 'forbid'` does not result in
+     |          an error if extra values are passed, but they will be ignored.
+     |      
+     |      Args:
+     |          _fields_set: A set of field names that were originally explicitly set during instantiation. If provided,
+     |              this is directly used for the [`model_fields_set`][pydantic.BaseModel.model_fields_set] attribute.
+     |              Otherwise, the field names from the `values` argument will be used.
+     |          values: Trusted or pre-validated data dictionary.
+     |      
+     |      Returns:
+     |          A new instance of the `Model` class with validated data.
+     |  
+     |  model_json_schema(by_alias: 'bool' = True, ref_template: 'str' = '#/$defs/{model}', schema_generator: 'type[GenerateJsonSchema]' = <class 'pydantic.json_schema.GenerateJsonSchema'>, mode: 'JsonSchemaMode' = 'validation') -> 'dict[str, Any]' from pydantic._internal._model_construction.ModelMetaclass
+     |      Generates a JSON schema for a model class.
+     |      
+     |      Args:
+     |          by_alias: Whether to use attribute aliases or not.
+     |          ref_template: The reference template.
+     |          schema_generator: To override the logic used to generate the JSON schema, as a subclass of
+     |              `GenerateJsonSchema` with your desired modifications
+     |          mode: The mode in which to generate the schema.
+     |      
+     |      Returns:
+     |          The JSON schema for the given model class.
+     |  
+     |  model_parametrized_name(params: 'tuple[type[Any], ...]') -> 'str' from pydantic._internal._model_construction.ModelMetaclass
+     |      Compute the class name for parametrizations of generic classes.
+     |      
+     |      This method can be overridden to achieve a custom naming scheme for generic BaseModels.
+     |      
+     |      Args:
+     |          params: Tuple of types of the class. Given a generic class
+     |              `Model` with 2 type variables and a concrete model `Model[str, int]`,
+     |              the value `(str, int)` would be passed to `params`.
+     |      
+     |      Returns:
+     |          String representing the new class where `params` are passed to `cls` as type variables.
+     |      
+     |      Raises:
+     |          TypeError: Raised when trying to generate concrete names for non-generic models.
+     |  
+     |  model_rebuild(*, force: 'bool' = False, raise_errors: 'bool' = True, _parent_namespace_depth: 'int' = 2, _types_namespace: 'MappingNamespace | None' = None) -> 'bool | None' from pydantic._internal._model_construction.ModelMetaclass
+     |      Try to rebuild the pydantic-core schema for the model.
+     |      
+     |      This may be necessary when one of the annotations is a ForwardRef which could not be resolved during
+     |      the initial attempt to build the schema, and automatic rebuilding fails.
+     |      
+     |      Args:
+     |          force: Whether to force the rebuilding of the model schema, defaults to `False`.
+     |          raise_errors: Whether to raise errors, defaults to `True`.
+     |          _parent_namespace_depth: The depth level of the parent namespace, defaults to 2.
+     |          _types_namespace: The types namespace, defaults to `None`.
+     |      
+     |      Returns:
+     |          Returns `None` if the schema is already "complete" and rebuilding was not required.
+     |          If rebuilding _was_ required, returns `True` if rebuilding was successful, otherwise `False`.
+     |  
+     |  model_validate(obj: 'Any', *, strict: 'bool | None' = None, from_attributes: 'bool | None' = None, context: 'Any | None' = None) -> 'Self' from pydantic._internal._model_construction.ModelMetaclass
+     |      Validate a pydantic model instance.
+     |      
+     |      Args:
+     |          obj: The object to validate.
+     |          strict: Whether to enforce types strictly.
+     |          from_attributes: Whether to extract data from object attributes.
+     |          context: Additional context to pass to the validator.
+     |      
+     |      Raises:
+     |          ValidationError: If the object could not be validated.
+     |      
+     |      Returns:
+     |          The validated model instance.
+     |  
+     |  model_validate_json(json_data: 'str | bytes | bytearray', *, strict: 'bool | None' = None, context: 'Any | None' = None) -> 'Self' from pydantic._internal._model_construction.ModelMetaclass
+     |      Usage docs: https://docs.pydantic.dev/2.10/concepts/json/#json-parsing
+     |      
+     |      Validate the given JSON data against the Pydantic model.
+     |      
+     |      Args:
+     |          json_data: The JSON data to validate.
+     |          strict: Whether to enforce types strictly.
+     |          context: Extra variables to pass to the validator.
+     |      
+     |      Returns:
+     |          The validated Pydantic model.
+     |      
+     |      Raises:
+     |          ValidationError: If `json_data` is not a JSON string or the object could not be validated.
+     |  
+     |  model_validate_strings(obj: 'Any', *, strict: 'bool | None' = None, context: 'Any | None' = None) -> 'Self' from pydantic._internal._model_construction.ModelMetaclass
+     |      Validate the given object with string data against the Pydantic model.
+     |      
+     |      Args:
+     |          obj: The object containing string data to validate.
+     |          strict: Whether to enforce types strictly.
+     |          context: Extra variables to pass to the validator.
+     |      
+     |      Returns:
+     |          The validated Pydantic model.
+     |  
+     |  parse_file(path: 'str | Path', *, content_type: 'str | None' = None, encoding: 'str' = 'utf8', proto: 'DeprecatedParseProtocol | None' = None, allow_pickle: 'bool' = False) -> 'Self' from pydantic._internal._model_construction.ModelMetaclass
+     |  
+     |  parse_obj(obj: 'Any') -> 'Self' from pydantic._internal._model_construction.ModelMetaclass
+     |  
+     |  parse_raw(b: 'str | bytes', *, content_type: 'str | None' = None, encoding: 'str' = 'utf8', proto: 'DeprecatedParseProtocol | None' = None, allow_pickle: 'bool' = False) -> 'Self' from pydantic._internal._model_construction.ModelMetaclass
+     |  
+     |  schema(by_alias: 'bool' = True, ref_template: 'str' = '#/$defs/{model}') -> 'Dict[str, Any]' from pydantic._internal._model_construction.ModelMetaclass
+     |  
+     |  schema_json(*, by_alias: 'bool' = True, ref_template: 'str' = '#/$defs/{model}', **dumps_kwargs: 'Any') -> 'str' from pydantic._internal._model_construction.ModelMetaclass
+     |  
+     |  update_forward_refs(**localns: 'Any') -> 'None' from pydantic._internal._model_construction.ModelMetaclass
+     |  
+     |  validate(value: 'Any') -> 'Self' from pydantic._internal._model_construction.ModelMetaclass
+     |  
+     |  ----------------------------------------------------------------------
+     |  Readonly properties inherited from pydantic.main.BaseModel:
+     |  
+     |  __fields_set__
+     |  
+     |  model_computed_fields
+     |      Get metadata about the computed fields defined on the model.
+     |      
+     |      Deprecation warning: you should be getting this information from the model class, not from an instance.
+     |      In V3, this property will be removed from the `BaseModel` class.
+     |      
+     |      Returns:
+     |          A mapping of computed field names to [`ComputedFieldInfo`][pydantic.fields.ComputedFieldInfo] objects.
+     |  
+     |  model_extra
+     |      Get extra fields set during validation.
+     |      
+     |      Returns:
+     |          A dictionary of extra fields, or `None` if `config.extra` is not set to `"allow"`.
+     |  
+     |  model_fields
+     |      Get metadata about the fields defined on the model.
+     |      
+     |      Deprecation warning: you should be getting this information from the model class, not from an instance.
+     |      In V3, this property will be removed from the `BaseModel` class.
+     |      
+     |      Returns:
+     |          A mapping of field names to [`FieldInfo`][pydantic.fields.FieldInfo] objects.
+     |  
+     |  model_fields_set
+     |      Returns the set of fields that have been explicitly set on this model instance.
+     |      
+     |      Returns:
+     |          A set of strings representing the fields that have been set,
+     |              i.e. that were not filled from defaults.
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data descriptors inherited from pydantic.main.BaseModel:
+     |  
+     |  __dict__
+     |      dictionary for instance variables (if defined)
+     |  
+     |  __pydantic_extra__
+     |  
+     |  __pydantic_fields_set__
+     |  
+     |  __pydantic_private__
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data and other attributes inherited from pydantic.main.BaseModel:
+     |  
+     |  __hash__ = None
+     |  
+     |  __pydantic_root_model__ = False
+    
+    class MemoryAdaptiveDispatcher(BaseDispatcher)
+     |  MemoryAdaptiveDispatcher(memory_threshold_percent: float = 90.0, check_interval: float = 1.0, max_session_permit: int = 20, memory_wait_timeout: float = 300.0, rate_limiter: Optional[crawl4ai.async_dispatcher.RateLimiter] = None, monitor: Optional[crawl4ai.async_dispatcher.CrawlerMonitor] = None)
+     |  
+     |  Method resolution order:
+     |      MemoryAdaptiveDispatcher
+     |      BaseDispatcher
+     |      abc.ABC
+     |      builtins.object
+     |  
+     |  Methods defined here:
+     |  
+     |  __init__(self, memory_threshold_percent: float = 90.0, check_interval: float = 1.0, max_session_permit: int = 20, memory_wait_timeout: float = 300.0, rate_limiter: Optional[crawl4ai.async_dispatcher.RateLimiter] = None, monitor: Optional[crawl4ai.async_dispatcher.CrawlerMonitor] = None)
+     |      Initialize self.  See help(type(self)) for accurate signature.
+     |  
+     |  async crawl_url(self, url: str, config: crawl4ai.async_configs.CrawlerRunConfig, task_id: str) -> crawl4ai.models.CrawlerTaskResult
+     |  
+     |  async run_urls(self, urls: List[str], crawler: 'AsyncWebCrawler', config: crawl4ai.async_configs.CrawlerRunConfig) -> List[crawl4ai.models.CrawlerTaskResult]
+     |  
+     |  async run_urls_stream(self, urls: List[str], crawler: 'AsyncWebCrawler', config: crawl4ai.async_configs.CrawlerRunConfig) -> collections.abc.AsyncGenerator[crawl4ai.models.CrawlerTaskResult, None]
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data and other attributes defined here:
+     |  
+     |  __abstractmethods__ = frozenset()
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data descriptors inherited from BaseDispatcher:
+     |  
+     |  __dict__
+     |      dictionary for instance variables (if defined)
+     |  
+     |  __weakref__
+     |      list of weak references to the object (if defined)
+    
+    class PruningContentFilter(RelevantContentFilter)
+     |  PruningContentFilter(user_query: str = None, min_word_threshold: int = None, threshold_type: str = 'fixed', threshold: float = 0.48)
+     |  
+     |  Content filtering using pruning algorithm with dynamic threshold.
+     |  
+     |  How it works:
+     |  1. Extracts page metadata with fallbacks.
+     |  2. Extracts text chunks from the body element.
+     |  3. Applies pruning algorithm to calculate scores for each chunk.
+     |  4. Filters out chunks below the threshold.
+     |  5. Sorts chunks by score in descending order.
+     |  6. Returns the top N chunks.
+     |  
+     |  Attributes:
+     |      user_query (str): User query for filtering (optional), if not provided, falls back to page metadata.
+     |      min_word_threshold (int): Minimum word threshold for filtering (optional).
+     |      threshold_type (str): Threshold type for dynamic threshold (default: 'fixed').
+     |      threshold (float): Fixed threshold value (default: 0.48).
+     |  
+     |      Methods:
+     |          filter_content(self, html: str, min_word_threshold: int = None):
+     |  
+     |  Method resolution order:
+     |      PruningContentFilter
+     |      RelevantContentFilter
+     |      abc.ABC
+     |      builtins.object
+     |  
+     |  Methods defined here:
+     |  
+     |  __init__(self, user_query: str = None, min_word_threshold: int = None, threshold_type: str = 'fixed', threshold: float = 0.48)
+     |      Initializes the PruningContentFilter class, if not provided, falls back to page metadata.
+     |      
+     |      Note:
+     |      If no query is given and no page metadata is available, then it tries to pick up the first significant paragraph.
+     |      
+     |      Args:
+     |          user_query (str): User query for filtering (optional).
+     |          min_word_threshold (int): Minimum word threshold for filtering (optional).
+     |          threshold_type (str): Threshold type for dynamic threshold (default: 'fixed').
+     |          threshold (float): Fixed threshold value (default: 0.48).
+     |  
+     |  filter_content(self, html: str, min_word_threshold: int = None) -> List[str]
+     |      Implements content filtering using pruning algorithm with dynamic threshold.
+     |      
+     |      Note:
+     |      This method implements the filtering logic for the PruningContentFilter class.
+     |      It takes HTML content as input and returns a list of filtered text chunks.
+     |      
+     |      Args:
+     |          html (str): HTML content to be filtered.
+     |          min_word_threshold (int): Minimum word threshold for filtering (optional).
+     |      
+     |      Returns:
+     |          List[str]: List of filtered text chunks.
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data and other attributes defined here:
+     |  
+     |  __abstractmethods__ = frozenset()
+     |  
+     |  ----------------------------------------------------------------------
+     |  Methods inherited from RelevantContentFilter:
+     |  
+     |  clean_element(self, tag: bs4.element.Tag) -> str
+     |      Common method for cleaning HTML elements with minimal overhead
+     |  
+     |  extract_page_query(self, soup: bs4.BeautifulSoup, body: bs4.element.Tag) -> str
+     |      Common method to extract page metadata with fallbacks
+     |  
+     |  extract_text_chunks(self, body: bs4.element.Tag, min_word_threshold: int = None) -> List[Tuple[str, str]]
+     |      Extracts text chunks from a BeautifulSoup body element while preserving order.
+     |      Returns list of tuples (text, tag_name) for classification.
+     |      
+     |      Args:
+     |          body: BeautifulSoup Tag object representing the body element
+     |      
+     |      Returns:
+     |          List of (text, tag_name) tuples
+     |  
+     |  is_excluded(self, tag: bs4.element.Tag) -> bool
+     |      Common method for exclusion logic
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data descriptors inherited from RelevantContentFilter:
+     |  
+     |  __dict__
+     |      dictionary for instance variables (if defined)
+     |  
+     |  __weakref__
+     |      list of weak references to the object (if defined)
+    
+    class RateLimiter(builtins.object)
+     |  RateLimiter(base_delay: Tuple[float, float] = (1.0, 3.0), max_delay: float = 60.0, max_retries: int = 3, rate_limit_codes: List[int] = None)
+     |  
+     |  Methods defined here:
+     |  
+     |  __init__(self, base_delay: Tuple[float, float] = (1.0, 3.0), max_delay: float = 60.0, max_retries: int = 3, rate_limit_codes: List[int] = None)
+     |      Initialize self.  See help(type(self)) for accurate signature.
+     |  
+     |  get_domain(self, url: str) -> str
+     |  
+     |  update_delay(self, url: str, status_code: int) -> bool
+     |  
+     |  async wait_if_needed(self, url: str) -> None
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data descriptors defined here:
+     |  
+     |  __dict__
+     |      dictionary for instance variables (if defined)
+     |  
+     |  __weakref__
+     |      list of weak references to the object (if defined)
+    
+    class RegexChunking(ChunkingStrategy)
+     |  RegexChunking(patterns=None, **kwargs)
+     |  
+     |  Chunking strategy that splits text based on regular expression patterns.
+     |  
+     |  Method resolution order:
+     |      RegexChunking
+     |      ChunkingStrategy
+     |      abc.ABC
+     |      builtins.object
+     |  
+     |  Methods defined here:
+     |  
+     |  __init__(self, patterns=None, **kwargs)
+     |      Initialize the RegexChunking object.
+     |      
+     |      Args:
+     |          patterns (list): A list of regular expression patterns to split text.
+     |  
+     |  chunk(self, text: str) -> list
+     |      Abstract method to chunk the given text.
+     |      
+     |      Args:
+     |          text (str): The text to chunk.
+     |      
+     |      Returns:
+     |          list: A list of chunks.
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data and other attributes defined here:
+     |  
+     |  __abstractmethods__ = frozenset()
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data descriptors inherited from ChunkingStrategy:
+     |  
+     |  __dict__
+     |      dictionary for instance variables (if defined)
+     |  
+     |  __weakref__
+     |      list of weak references to the object (if defined)
+    
+    class RelevantContentFilter(abc.ABC)
+     |  RelevantContentFilter(user_query: str = None)
+     |  
+     |  Abstract base class for content filtering strategies
+     |  
+     |  Method resolution order:
+     |      RelevantContentFilter
+     |      abc.ABC
+     |      builtins.object
+     |  
+     |  Methods defined here:
+     |  
+     |  __init__(self, user_query: str = None)
+     |      Initialize self.  See help(type(self)) for accurate signature.
+     |  
+     |  clean_element(self, tag: bs4.element.Tag) -> str
+     |      Common method for cleaning HTML elements with minimal overhead
+     |  
+     |  extract_page_query(self, soup: bs4.BeautifulSoup, body: bs4.element.Tag) -> str
+     |      Common method to extract page metadata with fallbacks
+     |  
+     |  extract_text_chunks(self, body: bs4.element.Tag, min_word_threshold: int = None) -> List[Tuple[str, str]]
+     |      Extracts text chunks from a BeautifulSoup body element while preserving order.
+     |      Returns list of tuples (text, tag_name) for classification.
+     |      
+     |      Args:
+     |          body: BeautifulSoup Tag object representing the body element
+     |      
+     |      Returns:
+     |          List of (text, tag_name) tuples
+     |  
+     |  filter_content(self, html: str) -> List[str]
+     |      Abstract method to be implemented by specific filtering strategies
+     |  
+     |  is_excluded(self, tag: bs4.element.Tag) -> bool
+     |      Common method for exclusion logic
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data descriptors defined here:
+     |  
+     |  __dict__
+     |      dictionary for instance variables (if defined)
+     |  
+     |  __weakref__
+     |      list of weak references to the object (if defined)
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data and other attributes defined here:
+     |  
+     |  __abstractmethods__ = frozenset({'filter_content'})
+    
+    class SemaphoreDispatcher(BaseDispatcher)
+     |  SemaphoreDispatcher(semaphore_count: int = 5, max_session_permit: int = 20, rate_limiter: Optional[crawl4ai.async_dispatcher.RateLimiter] = None, monitor: Optional[crawl4ai.async_dispatcher.CrawlerMonitor] = None)
+     |  
+     |  Method resolution order:
+     |      SemaphoreDispatcher
+     |      BaseDispatcher
+     |      abc.ABC
+     |      builtins.object
+     |  
+     |  Methods defined here:
+     |  
+     |  __init__(self, semaphore_count: int = 5, max_session_permit: int = 20, rate_limiter: Optional[crawl4ai.async_dispatcher.RateLimiter] = None, monitor: Optional[crawl4ai.async_dispatcher.CrawlerMonitor] = None)
+     |      Initialize self.  See help(type(self)) for accurate signature.
+     |  
+     |  async crawl_url(self, url: str, config: crawl4ai.async_configs.CrawlerRunConfig, task_id: str, semaphore: asyncio.locks.Semaphore = None) -> crawl4ai.models.CrawlerTaskResult
+     |  
+     |  async run_urls(self, crawler: 'AsyncWebCrawler', urls: List[str], config: crawl4ai.async_configs.CrawlerRunConfig) -> List[crawl4ai.models.CrawlerTaskResult]
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data and other attributes defined here:
+     |  
+     |  __abstractmethods__ = frozenset()
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data descriptors inherited from BaseDispatcher:
+     |  
+     |  __dict__
+     |      dictionary for instance variables (if defined)
+     |  
+     |  __weakref__
+     |      list of weak references to the object (if defined)
+    
+    class WebScrapingStrategy(ContentScrapingStrategy)
+     |  WebScrapingStrategy(logger=None)
+     |  
+     |  Class for web content scraping. Perhaps the most important class.
+     |  
+     |  How it works:
+     |  1. Extract content from HTML using BeautifulSoup.
+     |  2. Clean the extracted content using a content cleaning strategy.
+     |  3. Filter the cleaned content using a content filtering strategy.
+     |  4. Generate markdown content from the filtered content.
+     |  5. Return the markdown content.
+     |  
+     |  Method resolution order:
+     |      WebScrapingStrategy
+     |      ContentScrapingStrategy
+     |      abc.ABC
+     |      builtins.object
+     |  
+     |  Methods defined here:
+     |  
+     |  __init__(self, logger=None)
+     |      Initialize self.  See help(type(self)) for accurate signature.
+     |  
+     |  async ascrap(self, url: str, html: str, **kwargs) -> crawl4ai.models.ScrapingResult
+     |      Main entry point for asynchronous content scraping.
+     |      
+     |      Args:
+     |          url (str): The URL of the page to scrape.
+     |          html (str): The HTML content of the page.
+     |          **kwargs: Additional keyword arguments.
+     |      
+     |      Returns:
+     |          ScrapingResult: A structured result containing the scraped content.
+     |  
+     |  find_closest_parent_with_useful_text(self, tag, **kwargs)
+     |      Find the closest parent with useful text.
+     |      
+     |      Args:
+     |          tag (Tag): The starting tag to search from.
+     |          **kwargs: Additional keyword arguments.
+     |      
+     |      Returns:
+     |          Tag: The closest parent with useful text, or None if not found.
+     |  
+     |  flatten_nested_elements(self, node)
+     |      Flatten nested elements in a HTML tree.
+     |      
+     |      Args:
+     |          node (Tag): The root node of the HTML tree.
+     |      
+     |      Returns:
+     |          Tag: The flattened HTML tree.
+     |  
+     |  process_element(self, url, element: bs4.element.PageElement, **kwargs) -> Dict[str, Any]
+     |      Process an HTML element.
+     |      
+     |      How it works:
+     |      1. Check if the element is an image, video, or audio.
+     |      2. Extract the element's attributes and content.
+     |      3. Process the element based on its type.
+     |      4. Return the processed element information.
+     |      
+     |      Args:
+     |          url (str): The URL of the page containing the element.
+     |          element (Tag): The HTML element to process.
+     |          **kwargs: Additional keyword arguments.
+     |      
+     |      Returns:
+     |          dict: A dictionary containing the processed element information.
+     |  
+     |  process_image(self, img, url, index, total_images, **kwargs)
+     |      Process an image element.
+     |      
+     |      How it works:
+     |      1. Check if the image has valid display and inside undesired html elements.
+     |      2. Score an image for it's usefulness.
+     |      3. Extract image file metadata to extract size and extension.
+     |      4. Generate a dictionary with the processed image information.
+     |      5. Return the processed image information.
+     |      
+     |      Args:
+     |          img (Tag): The image element to process.
+     |          url (str): The URL of the page containing the image.
+     |          index (int): The index of the image in the list of images.
+     |          total_images (int): The total number of images in the list.
+     |          **kwargs: Additional keyword arguments.
+     |      
+     |      Returns:
+     |          dict: A dictionary containing the processed image information.
+     |  
+     |  remove_unwanted_attributes(self, element, important_attrs, keep_data_attributes=False)
+     |      Remove unwanted attributes from an HTML element.
+     |      
+     |      Args:
+     |          element (Tag): The HTML element to remove attributes from.
+     |          important_attrs (list): List of important attributes to keep.
+     |          keep_data_attributes (bool): Whether to keep data attributes.
+     |      
+     |      Returns:
+     |          None
+     |  
+     |  scrap(self, url: str, html: str, **kwargs) -> crawl4ai.models.ScrapingResult
+     |      Main entry point for content scraping.
+     |      
+     |      Args:
+     |          url (str): The URL of the page to scrape.
+     |          html (str): The HTML content of the page.
+     |          **kwargs: Additional keyword arguments.
+     |      
+     |      Returns:
+     |          ScrapingResult: A structured result containing the scraped content.
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data and other attributes defined here:
+     |  
+     |  __abstractmethods__ = frozenset()
+     |  
+     |  ----------------------------------------------------------------------
+     |  Data descriptors inherited from ContentScrapingStrategy:
+     |  
+     |  __dict__
+     |      dictionary for instance variables (if defined)
+     |  
+     |  __weakref__
+     |      list of weak references to the object (if defined)
+
+DATA
+    __all__ = ['AsyncWebCrawler', 'CrawlResult', 'CacheMode', 'ContentScra...
+
+VERSION
+    <module 'crawl4ai.__version__' from '/Users/jobs/Desktop/devin.cursorrules/branch-next-book/repo-crawl/venv/lib/python3.9/site-packages/crawl4ai/__version__.py'>
+
+FILE
+    /Users/jobs/Desktop/devin.cursorrules/branch-next-book/repo-crawl/venv/lib/python3.9/site-packages/crawl4ai/__init__.py
+
+

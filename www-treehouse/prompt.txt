@@ -1,0 +1,247 @@
+# UI Component Integration Meta-Prompt
+
+## Purpose
+This meta-prompt helps both humans and AI tools specify UI component requirements in a structured, comprehensive way. It combines natural language descriptions with machine-readable specifications.
+
+## Input Format
+Provide your requirements in either the human-readable format below or as a JSON object matching the schema. Include screenshots or design files when possible.
+
+## Component Specification Structure
+
+### 1. Component Identity
+```json
+{
+  "id": "string",
+  "name": "string",
+  "type": "atomic|composite|layout|page",
+  "description": "string",
+  "priority": 1-5,
+  "dependencies": ["componentId1", "componentId2"]
+}
+```
+
+### 2. Visual Design
+- Theme Integration:
+  ```json
+  {
+    "colorScheme": {
+      "primary": "string (hex)",
+      "secondary": "string (hex)",
+      "accent": "string (hex)",
+      "semantic": {
+        "success": "string (hex)",
+        "error": "string (hex)",
+        "warning": "string (hex)"
+      }
+    },
+    "typography": {
+      "fontFamily": "string",
+      "scale": {
+        "heading1": {"size": "string", "weight": "number", "lineHeight": "string"},
+        "body": {"size": "string", "weight": "number", "lineHeight": "string"}
+      }
+    },
+    "spacing": {
+      "unit": "number",
+      "scale": "fibonacci|geometric|custom"
+    }
+  }
+  ```
+
+### 3. Layout & Responsiveness
+```json
+{
+  "layout": {
+    "type": "flex|grid|block",
+    "breakpoints": {
+      "mobile": {"max": "number"},
+      "tablet": {"min": "number", "max": "number"},
+      "desktop": {"min": "number"}
+    },
+    "constraints": {
+      "maxWidth": "string",
+      "padding": "string",
+      "gap": "string"
+    }
+  }
+}
+```
+
+### 4. Interaction States
+```json
+{
+  "states": {
+    "idle": {"style": {}, "behavior": {}},
+    "hover": {"style": {}, "behavior": {}},
+    "active": {"style": {}, "behavior": {}},
+    "disabled": {"style": {}, "behavior": {}},
+    "loading": {"style": {}, "behavior": {}}
+  },
+  "animations": {
+    "enter": {"type": "string", "duration": "number", "easing": "string"},
+    "exit": {"type": "string", "duration": "number", "easing": "string"}
+  }
+}
+```
+
+### 5. Data Integration
+```json
+{
+  "data": {
+    "source": "props|state|api|store",
+    "schema": "typescript|json|graphql",
+    "caching": {
+      "strategy": "none|memory|persistent",
+      "ttl": "number"
+    },
+    "loading": {
+      "strategy": "eager|lazy|suspense",
+      "fallback": "componentId|skeleton|spinner"
+    }
+  }
+}
+```
+
+### 6. Accessibility Requirements
+```json
+{
+  "a11y": {
+    "role": "string",
+    "ariaLabels": {
+      "component": "string",
+      "actions": {"actionName": "string"}
+    },
+    "keyboardNav": {
+      "focusable": "boolean",
+      "shortcuts": {"key": "action"}
+    },
+    "semantics": {
+      "headingLevel": "number",
+      "landmarks": ["string"]
+    }
+  }
+}
+```
+
+### 7. Performance Metrics
+```json
+{
+  "performance": {
+    "budget": {
+      "size": {"max": "number", "unit": "KB"},
+      "renderTime": {"max": "number", "unit": "ms"},
+      "interactionDelay": {"max": "number", "unit": "ms"}
+    },
+    "optimization": {
+      "lazyLoad": "boolean",
+      "memoization": "boolean",
+      "virtualScroll": "boolean"
+    }
+  }
+}
+```
+
+## Example Usage
+
+```json
+{
+  "id": "data-table-01",
+  "name": "ProductsTable",
+  "type": "composite",
+  "description": "Interactive table showing product inventory with sorting and filtering",
+  "priority": 1,
+  "dependencies": ["Pagination", "SearchFilter"],
+  
+  "visual": {
+    "colorScheme": {
+      "primary": "#1a1a1a",
+      "secondary": "#f5f5f5",
+      "accent": "#6366f1"
+    },
+    "typography": {
+      "fontFamily": "Inter, system-ui",
+      "scale": {
+        "heading": {"size": "1.25rem", "weight": 600, "lineHeight": "1.4"},
+        "body": {"size": "0.875rem", "weight": 400, "lineHeight": "1.6"}
+      }
+    }
+  },
+
+  "layout": {
+    "type": "grid",
+    "breakpoints": {
+      "mobile": {"max": 768},
+      "tablet": {"min": 769, "max": 1024},
+      "desktop": {"min": 1025}
+    }
+  },
+
+  "states": {
+    "loading": {
+      "style": {"opacity": 0.7},
+      "behavior": {"showSkeleton": true}
+    },
+    "error": {
+      "style": {"border": "1px solid red"},
+      "behavior": {"showErrorMessage": true}
+    }
+  },
+
+  "data": {
+    "source": "api",
+    "schema": "typescript",
+    "caching": {
+      "strategy": "memory",
+      "ttl": 300
+    }
+  },
+
+  "a11y": {
+    "role": "table",
+    "ariaLabels": {
+      "component": "Products inventory table",
+      "actions": {
+        "sort": "Sort {column} in {direction} order",
+        "filter": "Filter {column} by {value}"
+      }
+    }
+  },
+
+  "performance": {
+    "budget": {
+      "size": {"max": 50, "unit": "KB"},
+      "renderTime": {"max": 100, "unit": "ms"}
+    }
+  }
+}
+```
+
+## Quality Assurance Checklist
+- [ ] All required properties are specified
+- [ ] Visual design matches design system tokens
+- [ ] Responsive behavior defined for all breakpoints
+- [ ] Accessibility requirements meet WCAG 2.1 AA
+- [ ] Performance budgets are realistic
+- [ ] State transitions and animations are defined
+- [ ] Error states and fallbacks are specified
+- [ ] Documentation includes usage examples
+
+## Implementation Guidelines
+1. Use TypeScript interfaces for prop definitions
+2. Follow project's component composition patterns
+3. Implement error boundaries where needed
+4. Use React.memo() for performance optimization
+5. Document storybook stories for all states
+6. Include unit tests for core functionality
+7. Add e2e tests for critical user flows
+
+## Validation Rules
+1. Component names must be PascalCase
+2. Color values must be valid hex codes
+3. Performance budgets must have units
+4. Breakpoints must not overlap
+5. Animation durations must be in ms
+6. ARIA labels must use interpolation syntax
+7. Dependencies must reference existing components
+
+Note: When providing an image or design file, ensure it demonstrates all specified states and interactions. The LLM will use this structure to generate appropriate component code and integration points. 

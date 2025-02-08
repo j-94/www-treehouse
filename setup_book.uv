@@ -1,0 +1,173 @@
+#!/usr/bin/env sh
+#!/usr/bin/env -S uv run --script --quiet
+# /// script
+# requires-python = "~=3.11"
+# dependencies = [
+#     "psycopg2-binary>=2.9.9",
+#     "rich>=13.0.0",
+#     "gitpython>=3.1.40",
+#     "nltk>=3.8.1",
+#     "python-dotenv>=1.0.0"
+# ]
+# ///
+
+""":"
+which uv >/dev/null \
+    || curl -LsSf https://astral.sh/uv/install.sh | sh \
+    && tail -n +3 $0 | $(head -n 2 $0 | tail -n 1 | cut -c 3-) - "$@"
+exit $?
+":"""
+
+import os
+import shutil
+import subprocess
+import argparse
+from pathlib import Path
+from rich.console import Console
+from rich.prompt import Prompt
+from dotenv import load_dotenv
+
+console = Console()
+
+def setup_nltk():
+    """Download required NLTK data."""
+    import nltk
+    nltk.download('punkt')
+    nltk.download('punkt_tab')
+
+def setup_api_keys():
+    """Setup API keys for model access."""
+    # Get OpenAI API key from environment
+    openai_key = os.getenv("OPENAI_API_KEY")
+    if not openai_key:
+        openai_key = Prompt.ask("Enter your OpenAI API key")
+    
+    # Write to .env file to ensure persistence
+    with open(".env", "w") as f:
+        f.write(f"OPENAI_API_KEY={openai_key}\n")
+    
+    # Reload environment variables
+    load_dotenv(override=True)
+
+def setup_r2e():
+    """Install R2E from source."""
+    r2e_dir = Path("r2e")
+    if not r2e_dir.exists():
+        with console.status("Installing R2E from source..."):
+            # Clone R2E repository
+            subprocess.run([
+                "git", "clone",
+                "https://github.com/r2e-project/r2e.git"
+            ], check=True)
+            
+            # Create and activate virtual environment
+            subprocess.run([
+                "uv", "venv", ".venv"
+            ], cwd=r2e_dir, check=True)
+            
+            # Get venv activation script
+            venv_activate = r2e_dir / ".venv" / "bin" / "activate"
+            if not venv_activate.exists():
+                raise FileNotFoundError(f"Virtual environment activation script not found at {venv_activate}")
+            
+            # Source the activation script and install dependencies
+            install_cmd = f". {venv_activate} && uv pip install -e . && uv pip install anthropic>=0.21.3 openai>=1.16.0 docker>=7.0.0 nltk>=3.8.1 rich>=13.7.1 python-dotenv>=1.0.0"
+            subprocess.run(install_cmd, shell=True, cwd=r2e_dir, check=True)
+    
+    # Get the full path to R2E executable
+    r2e_bin = r2e_dir / ".venv" / "bin" / "r2e"
+    if not r2e_bin.exists():
+        raise FileNotFoundError(f"R2E executable not found at {r2e_bin}")
+    
+    # Add R2E to PATH
+    os.environ["PATH"] = f"{r2e_dir}/.venv/bin:{os.environ['PATH']}"
+    
+    # Verify installation
+    try:
+        subprocess.run([str(r2e_bin), "--help"], check=True, capture_output=True)
+        console.print("[green]R2E installed successfully[/green]")
+    except subprocess.CalledProcessError:
+        console.print("[red]Failed to verify R2E installation[/red]")
+        raise
+    
+    return r2e_bin
+
+def setup_database():
+    """Setup PostgreSQL database."""
+    db_url = "postgresql://localhost:5432/book_inventory"
+    with console.status("Setting up database..."):
+        import psycopg2
+        conn = psycopg2.connect(db_url)
+        cur = conn.cursor()
+        cur.execute("CREATE EXTENSION IF NOT EXISTS unaccent;")
+        cur.execute("CREATE EXTENSION IF NOT EXISTS vector;")
+        conn.commit()
+        cur.close()
+        conn.close()
+    return db_url
+
+def main():
+    parser = argparse.ArgumentParser(description="Setup book inventory integration")
+    parser.add_argument("--provider", choices=["openai", "anthropic"], default="openai",
+                       help="Which model provider to use")
+    args = parser.parse_args()
+    
+    # Install NLTK data
+    setup_nltk()
+    
+    # Setup API keys
+    setup_api_keys()
+    
+    # Install R2E and get executable path
+    r2e_bin = setup_r2e()
+    
+    # Setup database
+    db_url = setup_database()
+    
+    # Clone and setup repository
+    target_dir = Path("www-treehouse")
+    if target_dir.exists():
+        shutil.rmtree(target_dir)
+    
+    with console.status("Setting up book inventory..."):
+        # Clone repo
+        subprocess.run([
+            "git", "clone",
+            "https://github.com/vercel-labs/book-inventory.git",
+            str(target_dir)
+        ], check=True)
+        
+        # Create .env
+        with open(target_dir / ".env", "w") as f:
+            f.write(f"DATABASE_URL={db_url}\n")
+        
+        # Install dependencies
+        subprocess.run(["pnpm", "install"], cwd=target_dir, check=True)
+        
+        # Setup R2E
+        subprocess.run([
+            str(r2e_bin), "setup",
+            "-r", "https://github.com/vercel-labs/book-inventory",
+            "--local"
+        ], check=True)
+        
+        # Extract functions
+        subprocess.run([
+            str(r2e_bin), "extract",
+            "-e", "book-inventory",
+            "--overwrite_extracted",
+            "--local"
+        ], check=True)
+        
+        # Generate and execute tests
+        subprocess.run([
+            str(r2e_bin), "genexec",
+            "-e", "book-inventory",
+            "--local",
+            "--save_chat",
+            "--min-cov", "0.7",
+            "--min-valid", "0.6"
+        ], check=True)
+
+if __name__ == "__main__":
+    main() 

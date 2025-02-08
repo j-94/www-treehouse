@@ -1,0 +1,162 @@
+#!/usr/bin/env sh
+#!/usr/bin/env -S uv run --script --quiet
+# /// script
+# requires-python = "~=3.11"
+# dependencies = [
+#     "beautifulsoup4>=4.12.2",
+#     "jsonlines>=4.0.0",
+#     "aiohttp>=3.9.1",
+#     "rich>=13.7.0"
+# ]
+# ///
+
+""":"
+which uv >/dev/null \
+    || curl -LsSf https://astral.sh/uv/install.sh | sh \
+    && tail -n +3 $0 | $(head -n 2 $0 | tail -n 1 | cut -c 3-) - "$@"
+exit $?
+":"""
+
+#region Documentation
+"""
+UV File: shop_map_links.uv
+Purpose: Extract Google Maps links from cannabis shop pages
+Dependencies: Listed in script header
+Usage: ./shop_map_links.uv input_dir output_jsonl
+Author: Claude
+Date: 2024-02-07
+"""
+#endregion
+
+import sys
+import re
+import json
+import jsonlines
+import os
+from bs4 import BeautifulSoup
+from rich.console import Console
+from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TaskProgressColumn
+
+console = Console(stderr=True)
+
+def extract_map_link(html_content):
+    """Extract Google Maps link from HTML content."""
+    soup = BeautifulSoup(html_content, 'html.parser')
+    
+    # First try to find direct maps.app.goo.gl links in the description
+    description = soup.find('div', style=lambda x: x and 'white-space:pre-wrap' in x)
+    if description:
+        desc_text = description.get_text()
+        map_match = re.search(r'https?://(?:maps\.app\.goo\.gl|goo\.gl/maps)/\S+', desc_text)
+        if map_match:
+            return map_match.group(0)
+    
+    # Then try to find map links in anchor tags, excluding contributor links
+    map_links = soup.select('a[href*="maps.app.goo.gl"], a[href*="google.com/maps"]')
+    for link in map_links:
+        href = link.get('href', '')
+        if 'maps.app.goo.gl' in href or 'goo.gl/maps' in href:
+            if '/contrib/' not in href and '?hl=' not in href:
+                return href
+                
+    # Finally check for map URLs in data attributes
+    map_elements = soup.find_all(attrs={"data-map-url": True})
+    for elem in map_elements:
+        map_url = elem.get('data-map-url')
+        if 'maps.app.goo.gl' in map_url or 'goo.gl/maps' in map_url:
+            return map_url
+            
+    return None
+
+def extract_shop_info(html_content):
+    """Extract shop name, description, area and map link."""
+    soup = BeautifulSoup(html_content, 'html.parser')
+    
+    # Extract shop name
+    name_elem = soup.find('h1')
+    name = name_elem.get_text().strip() if name_elem else None
+    
+    # Extract description
+    desc_elem = soup.find('div', style=lambda x: x and 'white-space:pre-wrap' in x)
+    description = desc_elem.get_text().strip() if desc_elem else None
+    
+    # Extract area
+    area_elem = soup.find('h2').find('a')
+    area = area_elem.get_text().strip() if area_elem else None
+    
+    # Extract map link
+    google_maps_link = extract_map_link(html_content)
+    
+    # Extract coordinates (if available)
+    coordinates = None
+    # TODO: Add coordinate extraction if needed
+    
+    return {
+        "name": name,
+        "description": description,
+        "area": area,
+        "google_maps_link": google_maps_link,
+        "coordinates": coordinates
+    }
+
+def main():
+    if len(sys.argv) != 3:
+        console.print("[red]Usage: ./shop_map_links.uv input_dir output_jsonl[/red]")
+        sys.exit(1)
+        
+    input_dir = sys.argv[1]
+    output_file = sys.argv[2]
+    
+    if not os.path.isdir(input_dir):
+        console.print(f"[red]Error: {input_dir} is not a directory[/red]")
+        sys.exit(1)
+    
+    html_files = [f for f in os.listdir(input_dir) if f.endswith('.html')]
+    
+    if not html_files:
+        console.print(f"[yellow]No HTML files found in {input_dir}[/yellow]")
+        sys.exit(0)
+        
+    results = []
+    failed_files = []
+    
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        BarColumn(),
+        TaskProgressColumn(),
+        console=console
+    ) as progress:
+        task = progress.add_task("[cyan]Processing HTML files...", total=len(html_files))
+        
+        for html_file in html_files:
+            file_path = os.path.join(input_dir, html_file)
+            try:
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    html_content = f.read()
+                
+                shop_info = extract_shop_info(html_content)
+                shop_info['source_file'] = html_file
+                results.append(shop_info)
+                
+            except Exception as e:
+                console.print(f"[red]Error processing {html_file}: {str(e)}[/red]")
+                failed_files.append(html_file)
+                
+            progress.advance(task)
+    
+    # Write results to output file
+    with jsonlines.open(output_file, mode='w') as writer:
+        for result in results:
+            writer.write(result)
+            
+    # Print summary
+    console.print(f"\n[green]Successfully processed {len(results)} files[/green]")
+    if failed_files:
+        console.print(f"[red]Failed to process {len(failed_files)} files:[/red]")
+        for failed in failed_files:
+            console.print(f"[red]  - {failed}[/red]")
+    console.print(f"[green]Results written to {output_file}[/green]")
+
+if __name__ == "__main__":
+    main() 

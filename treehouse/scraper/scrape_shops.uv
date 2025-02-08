@@ -1,0 +1,26 @@
+async def scrape_shop_page(crawler: AsyncWebCrawler, url: str) -> Optional[ShopData]:
+    """Scrape individual shop page with comprehensive error handling"""
+    try:
+        # Get page content with wait conditions for map
+        response = await crawler.arun(
+            url=url,
+            config=CrawlerRunConfig(
+                word_count_threshold=0,
+                screenshot=False,
+                cache_mode="memory",
+                wait_conditions=[
+                    {
+                        "selector": "div.layout_map__AFkLI",
+                        "timeout": 10,  # Wait up to 10 seconds for map
+                        "visible": True  # Element must be visible
+                    }
+                ]
+            )
+        )
+        # ... existing code ...
+    except Exception as e:
+        # ... existing code ...
+        print(f"Error scraping shop page: {e}")
+        return None
+
+    return shop_data 

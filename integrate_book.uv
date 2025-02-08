@@ -1,0 +1,177 @@
+#!/usr/bin/env sh
+#!/usr/bin/env -S uv run --script --quiet
+# /// script
+# requires-python = "~=3.11"
+# dependencies = [
+#     "r2e>=0.1.0",
+#     "pygount>=1.6",
+#     "radon>=5.1",
+#     "rich>=13.0.0",
+#     "psycopg2-binary>=2.9.9",
+#     "drizzle-orm>=0.29.3"
+# ]
+# ///
+
+""":"
+which uv >/dev/null \
+    || curl -LsSf https://astral.sh/uv/install.sh | sh \
+    && tail -n +3 $0 | $(head -n 2 $0 | tail -n 1 | cut -c 3-) - "$@"
+exit $?
+":"""
+
+#region Documentation
+"""
+UV File: integrate_book.uv
+Purpose: Integrate Vercel book inventory template with R2E for testing and analysis
+Dependencies: Listed in script header
+Usage: ./integrate_book.uv [--local] [--db-url DB_URL]
+Author: Claude
+Date: 2024-03-21
+"""
+#endregion
+
+import argparse
+import logging
+import os
+import shutil
+import subprocess
+from pathlib import Path
+from rich.console import Console
+from rich.logging import RichHandler
+
+# Setup logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(message)s",
+    handlers=[RichHandler(rich_tracebacks=True)]
+)
+log = logging.getLogger("book-integration")
+console = Console()
+
+def list_directory(path: Path) -> None:
+    """List contents of a directory for debugging."""
+    log.info(f"Contents of {path}:")
+    try:
+        for item in path.iterdir():
+            log.info(f"  {item.name}")
+    except Exception as e:
+        log.error(f"Error listing directory {path}: {e}")
+
+def setup_database(db_url: str) -> None:
+    """Setup PostgreSQL database with required extensions."""
+    log.info("Setting up PostgreSQL database...")
+    
+    try:
+        import psycopg2
+        conn = psycopg2.connect(db_url)
+        cur = conn.cursor()
+        
+        # Enable required extensions
+        cur.execute("CREATE EXTENSION IF NOT EXISTS unaccent;")
+        cur.execute("CREATE EXTENSION IF NOT EXISTS vector;")
+        
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+        log.info("Database extensions installed successfully")
+        
+    except Exception as e:
+        log.error(f"Database setup failed: {e}")
+        raise
+
+def setup_integration(local: bool = False, db_url: str = None) -> str:
+    """Initialize R2E integration for the book inventory."""
+    exp_id = "book-inventory"
+    repo_url = "https://github.com/vercel-labs/book-inventory.git"
+    
+    log.info("Setting up R2E integration for Vercel book inventory...")
+    
+    # Create target directory
+    target_dir = Path("www-treehouse")
+    if target_dir.exists():
+        log.info(f"Removing existing {target_dir}")
+        shutil.rmtree(target_dir)
+    
+    try:
+        # Clone the repository directly to target directory
+        log.info(f"Cloning {repo_url} into {target_dir}")
+        subprocess.run(["git", "clone", repo_url, str(target_dir)], check=True)
+        
+        # List contents for debugging
+        list_directory(target_dir)
+        
+        # Setup database if URL provided
+        if db_url:
+            setup_database(db_url)
+            
+            # Create .env file with database URL
+            env_file = target_dir / ".env"
+            log.info(f"Creating .env file at {env_file}")
+            with open(env_file, "w") as f:
+                f.write(f"DATABASE_URL={db_url}\n")
+        
+        # Install project dependencies
+        log.info("Installing project dependencies")
+        subprocess.run(["pnpm", "install"], cwd=target_dir, check=True)
+        
+        # Setup R2E with the cloned repository
+        log.info("Setting up R2E with the book inventory")
+        subprocess.run(["r2e", "setup", "-r", str(target_dir)], check=True)
+        
+        # Extract functions
+        log.info("Extracting functions")
+        cmd = ["r2e", "extract", "-e", exp_id, "--overwrite_extracted"]
+        if local:
+            cmd.append("--local")
+        subprocess.run(cmd, check=True)
+        
+    except Exception as e:
+        log.error(f"Error during setup: {e}")
+        raise
+    
+    return exp_id
+
+def build_and_test(exp_id: str, local: bool = False) -> None:
+    """Build and test the integration."""
+    log.info("Building and testing integration...")
+    
+    # Build with UV dependency management
+    cmd = ["r2e", "build", "-e", exp_id]
+    if local:
+        cmd.append("--local")
+    subprocess.run(cmd, check=True)
+    
+    # Generate and execute tests with high coverage requirements
+    subprocess.run([
+        "r2e", "genexec",
+        "-e", exp_id,
+        "--save_chat",
+        "--min_cov", "0.9",
+        "--min_valid", "0.8"
+    ], check=True)
+
+def main():
+    parser = argparse.ArgumentParser(description="Integrate Vercel book inventory with R2E")
+    parser.add_argument("--local", action="store_true", help="Run in local mode instead of Docker")
+    parser.add_argument("--db-url", help="PostgreSQL database URL")
+    args = parser.parse_args()
+    
+    try:
+        with console.status("Integrating book inventory..."):
+            exp_id = setup_integration(args.local, args.db_url)
+            build_and_test(exp_id, args.local)
+        
+        log.info("Integration completed successfully!")
+        log.info("Review results in: /path/to/execution/%s_out.json", exp_id)
+        
+    except subprocess.CalledProcessError as e:
+        log.error("Integration failed: %s", e)
+        log.error("Check logs for details")
+        raise
+    except Exception as e:
+        log.error(f"Unexpected error: {e}")
+        raise
+
+if __name__ == "__main__":
+    main() 

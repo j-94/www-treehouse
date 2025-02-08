@@ -1,0 +1,231 @@
+# Web Scraping Task: Cannabis Shop Listings from weed.th
+
+## Objective
+Extract comprehensive data about cannabis shops and their products from weed.th, focusing on accurate data collection, validation, and efficient processing. Target coverage: 11,394+ shop listings.
+
+## Primary Data Sources
+- Main Directory: https://weed.th/shops/ (11,394+ results)
+- Example Shop URL: https://weed.th/shop/3dc9b7e9-6afc-4187-bce2-d3bd92f156e3/bangkok/ogth
+
+### Directory Structure
+- Main listing page with pagination
+- Each shop has a unique UUID in the URL
+- Shops are organized by location (e.g., /bangkok/)
+- Results can be filtered by various criteria
+
+## Data Extraction Requirements
+
+### Shop Information
+Use the following verified CSS selectors to extract shop details:
+
+1. Basic Information:
+   ```css
+   name: "h1"
+   description: "div[style*='white-space:pre-wrap']"
+   rating: "div[style*='text-align:center'] img[alt='rating']"
+   reviews.count: "div[style*='text-align:center'] div[style*='font-size:22px']"
+   verified: "div[style*='color: rgb(74, 153, 233)']"
+   status.delivery: "div[style*='color: rgb(74, 153, 233)']"  # "Verified Delivery Service"
+   special_offers: "div._Dispensary_medcardHeader___L6AM"  # "30% DISCOUNT"
+   ```
+
+2. Media Content:
+   ```css
+   images.main: "div.FeaturedImage_featuredImage__GA2Cw img[alt*='og.th']"
+   images.gallery: "div.FeaturedImage_featuredImage__GA2Cw img[loading='eager']"
+   ```
+
+3. Product Information:
+   ```css
+   products.categories: "h2.ShopProductAll_productsHeader__10hBt"
+   products.items: "div.ShopProductAll_product__Cc_k7"
+   products.item.name: "div.ShopProductAll_header__BSmhH a"
+   products.item.price: "div.ShopProductAll_prices__pWISY"
+   products.item.description: "div.ShopProductAll_description__ItGaW"
+   products.item.category: "div.ShopProductAll_chips__jqQLw div div"  # Contains grade, THC, strain type
+   products.item.image: "div.ShopProductAll_imageContainer__1TiEr img"
+   ```
+
+4. Contact Information:
+   ```css
+   contact.website: "div[style*='border:1px solid #04b14e'] svg[width='26'][height='26']"
+   contact.line: "div[style*='border:1px solid #04b14e'] path[d*='M256 64C150']"
+   ```
+
+5. Location:
+   ```css
+   location.area: "h2 a[href*='/cannabis/']"
+   location.map: "div.layout_map__AFkLI"  # Contains the map element
+   ```
+
+## Technical Implementation
+
+### Crawl4AI Configuration
+1. Browser Configuration:
+   ```python
+   browser_config = BrowserConfig(
+       browser_type="chromium",
+       headless=True,
+       user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
+   )
+   ```
+
+2. Crawler Configuration:
+   ```python
+   crawler_config = CrawlerRunConfig(
+       word_count_threshold=0,  # Don't filter content
+       screenshot=False,
+       cache_mode="memory"  # Enable caching for efficiency
+   )
+   ```
+
+### Data Extraction Strategy
+1. Use JsonCssExtractionStrategy for structured data extraction
+2. Implement parallel processing for multiple shop pages
+3. Handle pagination and listing pages efficiently
+4. Validate extracted data against expected formats
+5. Implement rate limiting:
+   - Maximum 5 concurrent requests
+   - 1 second delay between requests
+   - Exponential backoff on errors
+   - Respect robots.txt guidelines
+
+### Error Handling and Validation
+1. Verify presence of required fields
+2. Validate data formats (e.g., ratings, review counts)
+3. Handle missing or malformed data gracefully
+4. Log validation errors for manual review
+
+### Data Storage
+1. Store raw HTML for verification purposes
+2. Save structured data in JSON format
+3. Maintain extraction metadata (timestamp, source URL, etc.)
+4. Implement data versioning for tracking changes
+
+## Progress Tracking and Monitoring
+1. Track number of shops processed
+2. Monitor extraction success rate
+3. Log failed extractions for retry
+4. Generate periodic progress reports
+
+## Verification Requirements
+1. Validate extracted data against visible web content
+2. Verify image URLs are accessible
+3. Check for data consistency across fields
+4. Monitor for changes in page structure
+
+## Notes
+- All selectors have been verified against live shop pages
+- Page structure uses consistent class names and styles
+- Product categories show count in parentheses
+- Images use consistent class names and loading attributes
+- Contact methods use consistent border styles
+- Directory contains 11,394+ shops as of March 2024
+- Pagination shows 12 shops per page (~950 pages total)
+
+## Future Improvements
+1. Add support for extracting product details
+2. Implement rate limiting and retry mechanisms
+3. Add support for incremental updates
+4. Enhance error reporting and monitoring
+
+Please extract the following information from cannabis shop pages on weed.th. Note that some fields are required while others are optional. The scraper should continue even if optional fields are missing, but should fail if any required field is missing.
+
+Required Fields (must be present for valid shop listing):
+- Basic Information:
+  - name: "h1"
+  - description: "div[style*='white-space:pre-wrap']"
+  - rating: "div[style*='text-align:center'] img[alt='rating']"
+- Images:
+  - main: "div.FeaturedImage_featuredImage__GA2Cw img[alt*='og.th']"
+- Products:
+  - categories: "h2.ShopProductAll_productsHeader__10hBt"
+  - items: "div.ShopProductAll_product__Cc_k7"
+  - item.name: "div.ShopProductAll_header__BSmhH a"
+- Location:
+  - area: "h2 a[href*='/cannabis/']"
+  - map: "div.layout_map__AFkLI"
+
+Optional Fields (extract if present):
+- Basic Information:
+  - reviews.count: "div[style*='text-align:center'] div[style*='font-size:22px']"
+  - verified: "div[style*='color: rgb(74, 153, 233)']"
+  - status.delivery: "div[style*='color: rgb(74, 153, 233)']"
+  - special_offers: "div._Dispensary_medcardHeader___L6AM"
+- Images:
+  - gallery: "div.FeaturedImage_featuredImage__GA2Cw img[loading='eager']"
+- Products:
+  - item.price: "div.ShopProductAll_prices__pWISY"
+  - item.description: "div.ShopProductAll_description__ItGaW"
+  - item.category: "div.ShopProductAll_chips__jqQLw div div"
+  - item.image: "div.ShopProductAll_imageContainer__1TiEr img"
+- Contact:
+  - website: "div[style*='border:1px solid #04b14e'] svg[width='26'][height='26']"
+  - line: "div[style*='border:1px solid #04b14e'] path[d*='M256 64C150']"
+
+Validation Rules:
+1. Required fields must be present and non-empty for a shop listing to be considered valid
+2. Optional fields should be extracted if present, but their absence should not cause the scraper to fail
+3. For products:
+   - Each product must have a name
+   - Other product fields (price, description, category, image) are optional
+   - Handle multiple categories and products per shop
+4. For images:
+   - Main shop image is required
+   - Gallery images are optional but should be collected if present
+5. For location:
+   - Both area and map must be present
+   - Extract map coordinates if available in data-lat and data-lng attributes
+
+Error Handling:
+1. Log missing required fields as errors
+2. Log missing optional fields as warnings for analysis
+3. Track field presence rates across all shops
+4. Continue scraping even if some optional fields are missing
+5. Skip invalid shop listings (missing required fields) but continue with the next shop
+
+Output Format:
+{
+  "name": "string (required)",
+  "description": "string (required)",
+  "rating": "number (required)",
+  "reviews_count": "number (optional)",
+  "verified": "boolean (optional)",
+  "delivery_service": "boolean (optional)",
+  "special_offers": "array of strings (optional)",
+  "images": {
+    "main": "string (required)",
+    "gallery": "array of strings (optional)"
+  },
+  "products": {
+    "categories": "array of strings (required)",
+    "items": [
+      {
+        "name": "string (required)",
+        "price": "number (optional)",
+        "description": "string (optional)",
+        "category": "array of strings (optional)",
+        "image": "string (optional)"
+      }
+    ]
+  },
+  "contact": {
+    "website": "string (optional)",
+    "line": "string (optional)"
+  },
+  "location": {
+    "area": "string (required)",
+    "map": {
+      "element": "string (required)",
+      "coordinates": {
+        "lat": "number (optional)",
+        "lng": "number (optional)"
+      }
+    }
+  },
+  "metadata": {
+    "scrape_time": "datetime",
+    "missing_optional_fields": "array of strings",
+    "validation_errors": "array of strings"
+  }
+}
