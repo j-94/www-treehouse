@@ -20,6 +20,40 @@ async function getFilteredDispensaries(searchParams: SearchParams) {
   }
 }
 
+// Create a client component wrapper for the map
+"use client";
+
+import { useCallback } from "react";
+
+function MapWrapper({ markers, center }: { 
+  markers: any[],
+  center: { lat: number; lng: number }
+}) {
+  const handleMarkerClick = useCallback((id: string) => {
+    console.log('Marker clicked:', id);
+  }, []);
+
+  const handleMarkerHover = useCallback((id: string) => {
+    console.log('Marker hovered:', id);
+  }, []);
+
+  const handleMarkerLeave = useCallback(() => {
+    console.log('Marker left');
+  }, []);
+
+  return (
+    <ClientSideMapContainer 
+      markers={markers} 
+      center={center} 
+      zoom={13}
+      onMarkerClick={handleMarkerClick}
+      onMarkerHover={handleMarkerHover}
+      onMarkerLeave={handleMarkerLeave}
+    />
+  );
+}
+
+// Server component
 export default async function Home({
   searchParams,
 }: {
@@ -52,13 +86,9 @@ export default async function Home({
       <div className="relative flex-1 mt-16">
         {/* Map Section */}
         <div className="w-full h-[calc(100vh-4rem)]">
-          <ClientSideMapContainer 
+          <MapWrapper 
             markers={mapMarkers} 
             center={mapCenter} 
-            zoom={13}
-            onMarkerClick={(id) => console.log('Marker clicked:', id)}
-            onMarkerHover={(id) => console.log('Marker hovered:', id)}
-            onMarkerLeave={() => console.log('Marker left')}
           />
         </div>
         
