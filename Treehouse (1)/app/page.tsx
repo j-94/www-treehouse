@@ -4,7 +4,7 @@ import { SearchParams, parseSearchParams } from "@/lib/search-params"
 import { fetchDispensariesWithPagination, estimateTotalDispensaries } from "./actions"
 import { DispensaryPagination } from "@/components/dispensary-pagination"
 import { DispensaryLink } from "@/components/dispensary-link"
-import { MapContainer } from "@/components/map-container"
+import { ClientSideMapContainer } from "@/components/ClientSideMapContainer"
 import { MobileSearchPeel } from "@/components/search/mobile-search-peel"
 import { SearchForm } from "@/components/search/search-form"
 
@@ -52,10 +52,13 @@ export default async function Home({
       <div className="relative flex-1 mt-16">
         {/* Map Section */}
         <div className="w-full h-[calc(100vh-4rem)]">
-          <MapContainer 
+          <ClientSideMapContainer 
             markers={mapMarkers} 
             center={mapCenter} 
-            zoom={13} 
+            zoom={13}
+            onMarkerClick={(id) => console.log('Marker clicked:', id)}
+            onMarkerHover={(id) => console.log('Marker hovered:', id)}
+            onMarkerLeave={() => console.log('Marker left')}
           />
         </div>
         
