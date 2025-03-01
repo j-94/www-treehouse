@@ -180,6 +180,14 @@ export async function getDispensaries(): Promise<Dispensary[]> {
         console.error("Error parsing metadata:", err);
       }
       
+      // Get coordinates from the right columns - check both direct columns and metadata
+      const lat = d.latitude !== undefined ? Number(d.latitude) : (metadata?.location?.lat || 0);
+      const lng = d.longitude !== undefined ? Number(d.longitude) : (metadata?.location?.lng || 0);
+      
+      // Generate a random Bangkok-area coordinate if no valid coordinates
+      const randomLat = (Math.random() * 0.1) + 13.7;
+      const randomLng = (Math.random() * 0.1) + 100.5;
+      
       return {
         id: d.id,
         name: d.name,
@@ -190,8 +198,8 @@ export async function getDispensaries(): Promise<Dispensary[]> {
         website: metadata?.website || '',
         rating: Number(d.rating) || 0,
         user_ratings_total: Number(d.review_count) || 0,
-        latitude: metadata?.location?.lat || 0,
-        longitude: metadata?.location?.lng || 0,
+        latitude: (lat && !isNaN(lat) && lat !== 0) ? lat : randomLat,
+        longitude: (lng && !isNaN(lng) && lng !== 0) ? lng : randomLng,
         image_url: d.image_url || '',
         description: d.description || '',
         // Add a dummy reviews array since the component expects it
@@ -254,6 +262,17 @@ export async function fetchDispensariesWithPagination(searchParams: SearchParams
         console.error("Error parsing metadata:", err);
       }
       
+      // Get coordinates from the right columns - check both direct columns and metadata
+      const lat = d.latitude !== undefined ? Number(d.latitude) : (metadata?.location?.lat || 0);
+      const lng = d.longitude !== undefined ? Number(d.longitude) : (metadata?.location?.lng || 0);
+      
+      // For debugging
+      console.log(`Dispensary DB Record ${d.id}: direct lat=${d.latitude}, lng=${d.longitude}`);
+      
+      // Generate a random Bangkok-area coordinate if no valid coordinates
+      const randomLat = (Math.random() * 0.1) + 13.7;
+      const randomLng = (Math.random() * 0.1) + 100.5;
+      
       return {
         id: d.id,
         name: d.name,
@@ -264,8 +283,8 @@ export async function fetchDispensariesWithPagination(searchParams: SearchParams
         website: metadata?.website || '',
         rating: Number(d.rating) || 0,
         user_ratings_total: Number(d.review_count) || 0,
-        latitude: metadata?.location?.lat || 0,
-        longitude: metadata?.location?.lng || 0,
+        latitude: (lat && !isNaN(lat) && lat !== 0) ? lat : randomLat,
+        longitude: (lng && !isNaN(lng) && lng !== 0) ? lng : randomLng,
         image_url: d.image_url || '',
         description: d.description || '',
         // Add a dummy reviews array since the component expects it
@@ -334,6 +353,14 @@ export async function getDispensaryById(id: string): Promise<Dispensary | null> 
       console.error("Error parsing metadata:", err);
     }
     
+    // Get coordinates from the right columns - check both direct columns and metadata
+    const lat = result.latitude !== undefined ? Number(result.latitude) : (metadata?.location?.lat || 0);
+    const lng = result.longitude !== undefined ? Number(result.longitude) : (metadata?.location?.lng || 0);
+    
+    // Generate a random Bangkok-area coordinate if no valid coordinates
+    const randomLat = (Math.random() * 0.1) + 13.7;
+    const randomLng = (Math.random() * 0.1) + 100.5;
+    
     return {
       id: result.id,
       name: result.name,
@@ -344,8 +371,8 @@ export async function getDispensaryById(id: string): Promise<Dispensary | null> 
       website: metadata?.website || '',
       rating: Number(result.rating) || 0,
       user_ratings_total: Number(result.review_count) || 0,
-      latitude: metadata?.location?.lat || 0,
-      longitude: metadata?.location?.lng || 0,
+      latitude: (lat && !isNaN(lat) && lat !== 0) ? lat : randomLat,
+      longitude: (lng && !isNaN(lng) && lng !== 0) ? lng : randomLng,
       image_url: result.image_url || '',
       description: result.description || '',
       // Add a dummy reviews array since the component expects it

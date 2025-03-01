@@ -4,9 +4,9 @@ import { SearchParams, parseSearchParams } from "@/lib/search-params"
 import { fetchDispensariesWithPagination, estimateTotalDispensaries } from "./actions"
 import { DispensaryPagination } from "@/components/dispensary-pagination"
 import { DispensaryLink } from "@/components/dispensary-link"
-import { ClientSideMapContainer } from "@/components/ClientSideMapContainer"
 import { MobileSearchPeel } from "@/components/search/mobile-search-peel"
 import { SearchForm } from "@/components/search/search-form"
+import { MapWrapper } from "@/components/map-wrapper"
 
 // Removing edge runtime as it's incompatible with better-sqlite3
 
@@ -18,39 +18,6 @@ async function getFilteredDispensaries(searchParams: SearchParams) {
     dispensaries,
     totalResults
   }
-}
-
-// Create a client component wrapper for the map
-"use client";
-
-import { useCallback } from "react";
-
-function MapWrapper({ markers, center }: { 
-  markers: any[],
-  center: { lat: number; lng: number }
-}) {
-  const handleMarkerClick = useCallback((id: string) => {
-    console.log('Marker clicked:', id);
-  }, []);
-
-  const handleMarkerHover = useCallback((id: string) => {
-    console.log('Marker hovered:', id);
-  }, []);
-
-  const handleMarkerLeave = useCallback(() => {
-    console.log('Marker left');
-  }, []);
-
-  return (
-    <ClientSideMapContainer 
-      markers={markers} 
-      center={center} 
-      zoom={13}
-      onMarkerClick={handleMarkerClick}
-      onMarkerHover={handleMarkerHover}
-      onMarkerLeave={handleMarkerLeave}
-    />
-  );
 }
 
 // Server component
@@ -66,17 +33,28 @@ export default async function Home({
   const itemsPerPage = 24 // This should match ITEMS_PER_PAGE in actions.ts
   const totalPages = Math.ceil(totalResults / itemsPerPage)
   
-  // Prepare map markers from dispensaries
-  const mapMarkers = dispensaries.map(d => ({
-    id: d.id.toString(),
-    name: d.name,
-    lat: d.latitude || 13.7563,
-    lng: d.longitude || 100.5018
-  }));
+  // Prepare map markers from dispensaries - make sure coordinates are valid numbers
+  const mapMarkers = dispensaries.map(d => {
+    // Debug values
+    console.log(`Dispensary ${d.id} - ${d.name}: lat=${d.latitude}, lng=${d.longitude}`);
+    
+    return {
+      id: d.id.toString(),
+      name: d.name,
+      lat: typeof d.latitude === 'number' && !isNaN(d.latitude) ? d.latitude : 13.7563,
+      lng: typeof d.longitude === 'number' && !isNaN(d.longitude) ? d.longitude : 100.5018
+    };
+  });
 
-  // Default to Bangkok if no dispensaries with coordinates
-  const mapCenter = dispensaries.length > 0 && dispensaries[0].latitude ? 
-    { lat: dispensaries[0].latitude, lng: dispensaries[0].longitude } : 
+  // Find a dispensary with valid coordinates for center
+  const dispensaryWithCoords = dispensaries.find(d => 
+    typeof d.latitude === 'number' && !isNaN(d.latitude) && d.latitude !== 0 &&
+    typeof d.longitude === 'number' && !isNaN(d.longitude) && d.longitude !== 0
+  );
+
+  // Default to Bangkok if no dispensaries with valid coordinates
+  const mapCenter = dispensaryWithCoords ? 
+    { lat: dispensaryWithCoords.latitude, lng: dispensaryWithCoords.longitude } : 
     { lat: 13.7563, lng: 100.5018 };
 
   return (
