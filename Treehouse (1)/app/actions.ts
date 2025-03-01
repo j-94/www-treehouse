@@ -31,7 +31,7 @@ export async function getItemsPerPage(): Promise<number> {
 }
 
 // Fetch dispensaries using RapidAPI
-async function fetchDispensariesFromAPI(): Promise<Dispensary[]> {
+export async function fetchDispensariesFromAPI(): Promise<Dispensary[]> {
   const rapidApiKey = process.env.RAPIDAPI_KEY;
   
   if (!rapidApiKey) {
