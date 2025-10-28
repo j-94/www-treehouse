@@ -1,0 +1,33 @@
+{
+  "name": "code-review",
+  "run_id": "cr-20251028T193500Z",
+  "agents": [
+    {
+      "name": "code-analyzer",
+      "task": "Analyze code quality, complexity, maintainability",
+      "verdict": "approve",
+      "confidence": 0.92
+    },
+    {
+      "name": "style-checker",
+      "task": "Check code style, conventions, formatting",
+      "verdict": "request_changes",
+      "confidence": 0.78
+    },
+    {
+      "name": "security-reviewer",
+      "task": "Scan for security vulnerabilities, dependencies",
+      "verdict": "approve",
+      "confidence": 0.95
+    }
+  ],
+  "gate": {
+    "rule": "majority_2",
+    "description": "2 of 3 agents must approve"
+  },
+  "artifacts": [
+    {"name": "review-report.md"},
+    {"name": "violations.json"},
+    {"name": "fixes.md"}
+  ]
+}

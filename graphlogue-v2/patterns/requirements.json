@@ -1,0 +1,33 @@
+{
+  "name": "requirements-review",
+  "run_id": "req-20251028T193600Z",
+  "agents": [
+    {
+      "name": "req-extractor",
+      "task": "Extract and parse requirements from spec",
+      "verdict": "approve",
+      "confidence": 0.90
+    },
+    {
+      "name": "prioritizer",
+      "task": "Prioritize by business impact and feasibility",
+      "verdict": "approve",
+      "confidence": 0.88
+    },
+    {
+      "name": "translator",
+      "task": "Translate to acceptance criteria and test cases",
+      "verdict": "approve",
+      "confidence": 0.91
+    }
+  ],
+  "gate": {
+    "rule": "unanimous",
+    "description": "All agents must approve requirements"
+  },
+  "artifacts": [
+    {"name": "requirements.md"},
+    {"name": "priorities.json"},
+    {"name": "acceptance-tests.md"}
+  ]
+}

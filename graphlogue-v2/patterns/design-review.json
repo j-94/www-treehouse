@@ -1,0 +1,33 @@
+{
+  "name": "design-review",
+  "run_id": "dr-20251028T193700Z",
+  "agents": [
+    {
+      "name": "pattern-detector",
+      "task": "Identify architectural patterns and anti-patterns",
+      "verdict": "approve",
+      "confidence": 0.89
+    },
+    {
+      "name": "risk-analyzer",
+      "task": "Analyze technical risks and trade-offs",
+      "verdict": "request_changes",
+      "confidence": 0.85
+    },
+    {
+      "name": "architect-reviewer",
+      "task": "Review overall architecture alignment",
+      "verdict": "approve",
+      "confidence": 0.93
+    }
+  ],
+  "gate": {
+    "rule": "majority_2",
+    "description": "2 of 3 must approve design"
+  },
+  "artifacts": [
+    {"name": "design-doc.md"},
+    {"name": "risks.json"},
+    {"name": "alternatives.md"}
+  ]
+}
