@@ -1,0 +1,96 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Graphlogue CLI Wrapper
+# Composable commands for snapshot → trace → anneal pipeline
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+
+# Usage
+usage() {
+  cat << 'EOF'
+glg — Graphlogue Pipeline CLI
+
+Usage:
+  glg snapshot [MODE]              Run snapshot capture (default: wasm-docs)
+  glg trace [--mode MODE]          Parse JSONL trace  (default: wasm-docs)
+  glg anneal [--mode MODE]         Derive policy      (default: wasm-docs)
+  glg full-cycle MODE              Run snapshot → trace → anneal
+  glg verify                        Run acceptance tests (4/4)
+  glg help                          Show this message
+
+Examples:
+  glg snapshot wasm-docs
+  glg trace --mode wasm-docs
+  glg anneal --mode wasm-docs
+  glg full-cycle wasm-docs
+  glg verify
+
+Environment:
+  MODE - snapshot mode (e.g., wasm-docs, prod, staging)
+EOF
+}
+
+# Main dispatcher
+main() {
+  local SUBCOMMAND="${1:-help}"
+  shift || true
+
+  case "$SUBCOMMAND" in
+    snapshot)
+      local MODE="${1:-wasm-docs}"
+      echo "🔹 Snapshot: $MODE"
+      cd "$PROJECT_ROOT"
+      bash "$SCRIPT_DIR/graphlogue_snapshot.sh" "$MODE"
+      ;;
+    trace)
+      local MODE="wasm-docs"
+      while [[ $# -gt 0 ]]; do
+        case "$1" in
+          --mode) MODE="$2"; shift 2 ;;
+          *) shift ;;
+        esac
+      done
+      echo "🔹 Trace: $MODE"
+      cd "$PROJECT_ROOT"
+      python3 "$SCRIPT_DIR/trace_snapshot_run.py" --mode "$MODE"
+      ;;
+    anneal)
+      local MODE="wasm-docs"
+      while [[ $# -gt 0 ]]; do
+        case "$1" in
+          --mode) MODE="$2"; shift 2 ;;
+          *) shift ;;
+        esac
+      done
+      echo "🔹 Anneal: $MODE"
+      cd "$PROJECT_ROOT"
+      python3 "$SCRIPT_DIR/derive_policy.py" --mode "$MODE"
+      ;;
+    full-cycle)
+      local MODE="${1:-wasm-docs}"
+      echo "🔹 Full Cycle: $MODE"
+      cd "$PROJECT_ROOT"
+      bash "$SCRIPT_DIR/graphlogue_snapshot.sh" "$MODE"
+      python3 "$SCRIPT_DIR/trace_snapshot_run.py" --mode "$MODE"
+      python3 "$SCRIPT_DIR/derive_policy.py" --mode "$MODE"
+      echo "✅ Full cycle complete"
+      ;;
+    verify)
+      echo "🔹 Running acceptance tests..."
+      cd "$PROJECT_ROOT"
+      bash ci/accept.sh
+      ;;
+    help|--help|-h)
+      usage
+      ;;
+    *)
+      echo "Unknown command: $SUBCOMMAND"
+      usage
+      exit 1
+      ;;
+  esac
+}
+
+main "$@"

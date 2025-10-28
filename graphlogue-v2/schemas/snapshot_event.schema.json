@@ -1,0 +1,143 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Snapshot Event - JSONL v1",
+  "description": "Schema for structured event logging in Graphlogue snapshot pipeline. Each event is a JSON line with RFC 3339 timestamp and discriminator-based routing.",
+  "type": "object",
+  "discriminator": {
+    "propertyName": "kind",
+    "mapping": {
+      "run.start": "#/$defs/RunStart",
+      "surface.ready": "#/$defs/SurfaceReady",
+      "capture.start": "#/$defs/CaptureStart",
+      "artifact.produced": "#/$defs/ArtifactProduced",
+      "net.error": "#/$defs/NetError",
+      "orchestrator.error": "#/$defs/OrchestratorError",
+      "run.complete": "#/$defs/RunComplete",
+      "run.error": "#/$defs/RunError"
+    }
+  },
+  "required": ["ts", "kind", "run_id", "seq"],
+  "$defs": {
+    "BaseEvent": {
+      "type": "object",
+      "properties": {
+        "ts": {
+          "type": "string",
+          "format": "date-time",
+          "description": "RFC 3339 UTC timestamp"
+        },
+        "kind": {
+          "type": "string",
+          "description": "Event type discriminator"
+        },
+        "run_id": {
+          "type": "string",
+          "description": "Unique run identifier (format: YYYYMMDD-HHMMSS-<uuid-prefix>)"
+        },
+        "seq": {
+          "type": "integer",
+          "description": "Event sequence number within run"
+        }
+      },
+      "required": ["ts", "kind", "run_id", "seq"]
+    },
+    "RunStart": {
+      "allOf": [
+        { "$ref": "#/$defs/BaseEvent" },
+        {
+          "type": "object",
+          "properties": {
+            "kind": { "const": "run.start" },
+            "mode": { "type": "string" }
+          }
+        }
+      ]
+    },
+    "SurfaceReady": {
+      "allOf": [
+        { "$ref": "#/$defs/BaseEvent" },
+        {
+          "type": "object",
+          "properties": {
+            "kind": { "const": "surface.ready" },
+            "surface": { "type": "string" }
+          }
+        }
+      ]
+    },
+    "CaptureStart": {
+      "allOf": [
+        { "$ref": "#/$defs/BaseEvent" },
+        {
+          "type": "object",
+          "properties": {
+            "kind": { "const": "capture.start" }
+          }
+        }
+      ]
+    },
+    "ArtifactProduced": {
+      "allOf": [
+        { "$ref": "#/$defs/BaseEvent" },
+        {
+          "type": "object",
+          "properties": {
+            "kind": { "const": "artifact.produced" },
+            "artifact_type": { "type": "string" },
+            "path": { "type": "string" },
+            "size_bytes": { "type": "integer" }
+          }
+        }
+      ]
+    },
+    "NetError": {
+      "allOf": [
+        { "$ref": "#/$defs/BaseEvent" },
+        {
+          "type": "object",
+          "properties": {
+            "kind": { "const": "net.error" },
+            "message": { "type": "string" }
+          }
+        }
+      ]
+    },
+    "OrchestratorError": {
+      "allOf": [
+        { "$ref": "#/$defs/BaseEvent" },
+        {
+          "type": "object",
+          "properties": {
+            "kind": { "const": "orchestrator.error" },
+            "message": { "type": "string" }
+          }
+        }
+      ]
+    },
+    "RunComplete": {
+      "allOf": [
+        { "$ref": "#/$defs/BaseEvent" },
+        {
+          "type": "object",
+          "properties": {
+            "kind": { "const": "run.complete" },
+            "status": { "enum": ["success", "partial", "failed"] },
+            "duration_ms": { "type": "integer" }
+          }
+        }
+      ]
+    },
+    "RunError": {
+      "allOf": [
+        { "$ref": "#/$defs/BaseEvent" },
+        {
+          "type": "object",
+          "properties": {
+            "kind": { "const": "run.error" },
+            "message": { "type": "string" }
+          }
+        }
+      ]
+    }
+  }
+}

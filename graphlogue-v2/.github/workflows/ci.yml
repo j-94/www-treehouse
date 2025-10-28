@@ -1,0 +1,41 @@
+name: CI - Snapshot/Trace/Anneal Pipeline
+
+on:
+  push:
+    branches: [ main, develop, 'release/**' ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  acceptance:
+    name: Acceptance Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+      - run: |
+          sudo apt-get update && sudo apt-get install -y chromium-browser
+          python -m pip install jsonschema pillow numpy
+          chmod +x scripts/glg
+          bash ci/accept.sh
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: artifacts
+          path: |
+            screenshots/
+            logs/
+            policies/
+
+  schema-validation:
+    name: Schema Validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+      - run: python ci/validate_schemas.py
