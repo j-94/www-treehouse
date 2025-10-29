@@ -1,0 +1,33 @@
+{
+  "name": "security-audit",
+  "run_id": "sec-20251028T193800Z",
+  "agents": [
+    {
+      "name": "owasp-checker",
+      "task": "Check against OWASP top 10 vulnerabilities",
+      "verdict": "approve",
+      "confidence": 0.94
+    },
+    {
+      "name": "dependency-scanner",
+      "task": "Scan dependencies for known CVEs",
+      "verdict": "approve",
+      "confidence": 0.96
+    },
+    {
+      "name": "compliance-auditor",
+      "task": "Verify compliance with security standards",
+      "verdict": "request_changes",
+      "confidence": 0.80
+    }
+  ],
+  "gate": {
+    "rule": "majority_2",
+    "description": "2 of 3 security agents must approve"
+  },
+  "artifacts": [
+    {"name": "audit-report.md"},
+    {"name": "vulnerabilities.json"},
+    {"name": "compliance-checklist.md"}
+  ]
+}

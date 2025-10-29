@@ -1,0 +1,167 @@
+{
+  "version": "1.0.0",
+  "description": "Safety & permissions policy for Graphlogue meta-orchestrator",
+  "profiles": {
+    "DEV": {
+      "level": "permissive",
+      "description": "Development mode: wider scopes, faster iteration"
+    },
+    "STRICT": {
+      "level": "restrictive",
+      "description": "Production mode: narrow scopes, mandatory approvals"
+    }
+  },
+  "active_profile": "DEV",
+  "budgets": {
+    "reflection": 1,
+    "cooldown_after_reflect_steps": 2,
+    "max_token_per_goal": 50000,
+    "max_time_per_goal_seconds": 300,
+    "max_parallel_agents": 4,
+    "agent_timeout_seconds": 120
+  },
+  "tools": {
+    "bash": {
+      "DEV": {
+        "require_approval": false,
+        "allowed_patterns": [
+          "python3 scripts/",
+          "git add",
+          "git commit",
+          "git push",
+          "npm install",
+          "cd graphlogue-v2"
+        ],
+        "deny_patterns": [
+          "rm -rf /",
+          "chmod 777",
+          "curl .* \\| sh",
+          "sudo",
+          "dd if=",
+          "mkfs"
+        ],
+        "max_timeout_ms": 120000
+      },
+      "STRICT": {
+        "require_approval": true,
+        "allowed_patterns": [
+          "python3 scripts/test.*",
+          "git diff",
+          "git status"
+        ],
+        "deny_patterns": [
+          "rm",
+          "chmod",
+          "curl",
+          "sudo",
+          "dd",
+          "git push",
+          "git reset --hard"
+        ],
+        "max_timeout_ms": 30000
+      }
+    },
+    "file_edit": {
+      "DEV": {
+        "require_approval": false,
+        "auto_approve_paths": [
+          "scripts/**",
+          "docs/**",
+          "tests/**",
+          "*.md"
+        ],
+        "dangerous_paths": [
+          ".git/**",
+          "policy.json",
+          ".env",
+          "secrets.json"
+        ],
+        "max_bytes_per_write": 500000
+      },
+      "STRICT": {
+        "require_approval": true,
+        "auto_approve_paths": [
+          "tests/**"
+        ],
+        "dangerous_paths": [
+          "*"
+        ],
+        "max_bytes_per_write": 50000
+      }
+    },
+    "file_read": {
+      "DEV": {
+        "allowed_paths": [
+          "**"
+        ],
+        "deny_paths": [
+          ".env",
+          "secrets.json",
+          "*.key",
+          "*.pem"
+        ]
+      },
+      "STRICT": {
+        "allowed_paths": [
+          "scripts/**",
+          "docs/**",
+          "*.md",
+          "*.json",
+          "*.py"
+        ],
+        "deny_paths": [
+          ".env",
+          "secrets.json",
+          "*.key"
+        ]
+      }
+    },
+    "bg_agent": {
+      "DEV": {
+        "allowed_tasks": [
+          "test_writing",
+          "documentation",
+          "refactoring",
+          "code_search",
+          "validation",
+          "linting"
+        ],
+        "require_declaration": true,
+        "max_parallel": 4,
+        "default_timeout_ms": 120000
+      },
+      "STRICT": {
+        "allowed_tasks": [
+          "test_writing",
+          "documentation"
+        ],
+        "require_declaration": true,
+        "max_parallel": 1,
+        "default_timeout_ms": 60000
+      }
+    }
+  },
+  "events": {
+    "required_fields": [
+      "ts",
+      "mode",
+      "tool",
+      "args_hash",
+      "verdict",
+      "latency_ms"
+    ],
+    "redact_fields": [
+      "token",
+      "api_key",
+      "secret",
+      "password",
+      "credentials"
+    ]
+  },
+  "approval_gates": {
+    "file_delete": "always",
+    "bash_destructive": "always",
+    "git_force": "always",
+    "policy_change": "always"
+  }
+}

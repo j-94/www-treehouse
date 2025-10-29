@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Graphlogue Meta-Chat Loop - Real-time Reasoning Visualization</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis.min.css" rel="stylesheet" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #e0e0e0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: rgba(0, 0, 0, 0.4);
+            border-bottom: 1px solid #00d4ff;
+            padding: 16px 24px;
+            box-shadow: 0 2px 8px rgba(0, 212, 255, 0.2);
+        }
+
+        .header h1 {
+            font-size: 24px;
+            color: #00d4ff;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .header p {
+            font-size: 13px;
+            color: #888;
+        }
+
+        .controls {
+            padding: 16px 24px;
+            background: rgba(0, 0, 0, 0.2);
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+            border-bottom: 1px solid rgba(0, 212, 255, 0.1);
+        }
+
+        .run-id-input {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex: 1;
+            min-width: 300px;
+        }
+
+        input[type="text"] {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            color: #e0e0e0;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 13px;
+            flex: 1;
+            min-width: 200px;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #00d4ff;
+            background: rgba(0, 212, 255, 0.1);
+        }
+
+        button {
+            background: #00d4ff;
+            color: #1a1a2e;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        button:hover {
+            background: #00f0ff;
+            box-shadow: 0 0 16px rgba(0, 212, 255, 0.4);
+        }
+
+        button:disabled {
+            background: #555;
+            color: #999;
+            cursor: not-allowed;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-connected {
+            background: rgba(0, 255, 100, 0.2);
+            color: #00ff64;
+        }
+
+        .status-disconnected {
+            background: rgba(255, 0, 100, 0.2);
+            color: #ff0064;
+        }
+
+        .status-waiting {
+            background: rgba(255, 200, 0, 0.2);
+            color: #ffc800;
+        }
+
+        .main-container {
+            display: flex;
+            flex: 1;
+            gap: 16px;
+            padding: 16px;
+            overflow: hidden;
+        }
+
+        .graph-panel {
+            flex: 2;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(0, 212, 255, 0.1);
+            border-radius: 8px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #network {
+            flex: 1;
+            background: rgba(26, 26, 46, 0.8);
+        }
+
+        .sidebar {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            overflow-y: auto;
+        }
+
+        .panel {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(0, 212, 255, 0.1);
+            border-radius: 8px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .panel-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #00d4ff;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid rgba(0, 212, 255, 0.2);
+            padding-bottom: 8px;
+        }
+
+        .events-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-size: 12px;
+        }
+
+        .event-item {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 8px;
+            border-left: 3px solid rgba(0, 212, 255, 0.3);
+            border-radius: 2px;
+            transition: all 0.2s;
+        }
+
+        .event-item:hover {
+            background: rgba(0, 212, 255, 0.1);
+            border-left-color: #00d4ff;
+        }
+
+        .event-seq {
+            color: #888;
+            font-size: 11px;
+        }
+
+        .event-kind {
+            color: #00d4ff;
+            font-weight: 600;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            font-size: 12px;
+        }
+
+        .metric-box {
+            background: rgba(0, 212, 255, 0.05);
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid rgba(0, 212, 255, 0.2);
+        }
+
+        .metric-label {
+            color: #888;
+            font-size: 11px;
+            margin-bottom: 4px;
+        }
+
+        .metric-value {
+            color: #00d4ff;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .decision-gates {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .gate-buttons {
+            display: flex;
+            gap: 8px;
+            justify-content: space-between;
+        }
+
+        .gate-buttons button {
+            flex: 1;
+            padding: 10px 8px;
+            font-size: 12px;
+        }
+
+        .chat-input {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        textarea {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            color: #e0e0e0;
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #00d4ff;
+            background: rgba(0, 212, 255, 0.1);
+        }
+
+        .send-btn {
+            width: 100%;
+        }
+
+        .error-banner {
+            background: rgba(255, 0, 100, 0.2);
+            border: 1px solid rgba(255, 0, 100, 0.4);
+            color: #ff6464;
+            padding: 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-bottom: 12px;
+        }
+
+        .success-message {
+            background: rgba(0, 255, 100, 0.2);
+            border: 1px solid rgba(0, 255, 100, 0.4);
+            color: #00ff64;
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            text-align: center;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(0, 212, 255, 0.3);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 212, 255, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🔍 Graphlogue Meta-Chat Loop</h1>
+        <p>Real-time reasoning visualization with decision gates and feedback</p>
+    </div>
+
+    <div class="controls">
+        <div class="run-id-input">
+            <label for="runIdInput" style="font-size: 12px;">Run ID:</label>
+            <input type="text" id="runIdInput" placeholder="e.g., demo-1728000000 (or leave blank for new)" />
+            <button id="connectBtn">Connect</button>
+            <span id="statusBadge" class="status-badge status-disconnected">Disconnected</span>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="graph-panel">
+            <div id="network"></div>
+        </div>
+
+        <div class="sidebar">
+            <div class="panel">
+                <div class="panel-title">📊 Event Stream</div>
+                <div id="eventsList" class="events-list">
+                    <div style="color: #888; font-size: 12px;">Waiting for events...</div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-title">📈 Metrics</div>
+                <div id="metricsContainer" class="metrics-grid">
+                    <div class="metric-box">
+                        <div class="metric-label">Throughput</div>
+                        <div class="metric-value" id="metricThroughput">-</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-label">Latency</div>
+                        <div class="metric-value" id="metricLatency">-</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-label">Memory</div>
+                        <div class="metric-value" id="metricMemory">-</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-label">Duration</div>
+                        <div class="metric-value" id="metricDuration">-</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-title">🎯 Decision Gate</div>
+                <div id="decisionGateContainer" style="display: none;">
+                    <p id="gateQuestion" style="font-size: 12px; margin-bottom: 12px;"></p>
+                    <div class="gate-buttons">
+                        <button id="gateApprove" style="background: #00cc44;">Approve</button>
+                        <button id="gateRevise" style="background: #ffaa00;">Revise</button>
+                        <button id="gateReject" style="background: #ff4444;">Reject</button>
+                    </div>
+                </div>
+                <div id="gateInactive" style="color: #888; font-size: 12px;">No active decision gates</div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-title">💬 Feedback</div>
+                <div id="feedbackError" class="error-banner" style="display: none;"></div>
+                <div id="feedbackSuccess" class="success-message" style="display: none;">✓ Feedback sent</div>
+                <div class="chat-input">
+                    <textarea id="feedbackText" placeholder="Send feedback to the reasoning agent..."></textarea>
+                    <button id="sendFeedbackBtn" class="send-btn">Send Feedback</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const API_BASE = 'http://localhost:8000';
+        let currentRunId = null;
+        let eventSource = null;
+        let graphNodes = [];
+        let graphEdges = [];
+        let nodeCount = 0;
+        let network = null;
+        const nodeColors = {
+            'run.start': '#00d4ff',
+            'reasoning.step': '#00ff64',
+            'pattern.detected': '#ffaa00',
+            'decision.gate': '#ff6464',
+            'execution.start': '#00d4ff',
+            'execution.complete': '#00ff64',
+            'metrics.recorded': '#00d4ff',
+            'run.complete': '#00ff64',
+            'run.error': '#ff4444'
+        };
+
+        // Initialize vis.js network
+        function initializeNetwork() {
+            const container = document.getElementById('network');
+            const data = {
+                nodes: new vis.DataSet(graphNodes),
+                edges: new vis.DataSet(graphEdges)
+            };
+            const options = {
+                physics: false,
+                nodes: {
+                    shape: 'box',
+                    margin: 10,
+                    widthConstraint: { maximum: 200 },
+                    font: { size: 12, color: '#e0e0e0' },
+                    color: {
+                        background: 'rgba(0, 212, 255, 0.2)',
+                        border: '#00d4ff',
+                        highlight: {
+                            background: 'rgba(0, 212, 255, 0.4)',
+                            border: '#00ff64'
+                        }
+                    }
+                },
+                edges: {
+                    color: { color: 'rgba(0, 212, 255, 0.3)', highlight: '#00ff64' },
+                    arrows: 'to',
+                    font: { size: 11, color: '#888' }
+                }
+            };
+            network = new vis.Network(container, data, options);
+        }
+
+        // Add event to graph
+        function addEventToGraph(event) {
+            const { kind, seq } = event;
+            nodeCount++;
+
+            const nodeId = `node_${seq}`;
+            graphNodes.push({
+                id: nodeId,
+                label: `[${seq}] ${kind}`,
+                color: {
+                    background: nodeColors[kind] || '#666',
+                    border: nodeColors[kind] || '#666'
+                },
+                x: seq * 150,
+                y: Math.sin(seq) * 100
+            });
+
+            if (seq > 1) {
+                graphEdges.push({
+                    from: `node_${seq - 1}`,
+                    to: nodeId,
+                    arrows: 'to'
+                });
+            }
+
+            // Update vis.js network
+            if (network) {
+                network.setData({ nodes: graphNodes, edges: graphEdges });
+                network.fit({ animation: { duration: 300 } });
+            }
+        }
+
+        // Add event to event list
+        function addEventToList(event) {
+            const eventsList = document.getElementById('eventsList');
+            if (eventsList.children[0]?.textContent.includes('Waiting for events')) {
+                eventsList.innerHTML = '';
+            }
+
+            const eventItem = document.createElement('div');
+            eventItem.className = 'event-item';
+
+            const timestamp = event.ts ? new Date(event.ts).toLocaleTimeString() : 'unknown';
+            const payload = JSON.stringify(event.payload || {}).substring(0, 100);
+
+            eventItem.innerHTML = `
+                <div><span class="event-seq">[${event.seq}]</span> <span class="event-kind">${event.kind}</span></div>
+                <div style="color: #888; font-size: 11px;">${timestamp}</div>
+                ${payload !== '{}' ? `<div style="color: #aaa; font-size: 11px; margin-top: 4px;">${payload}...</div>` : ''}
+            `;
+
+            eventsList.insertBefore(eventItem, eventsList.firstChild);
+            if (eventsList.children.length > 20) {
+                eventsList.removeChild(eventsList.lastChild);
+            }
+        }
+
+        // Update metrics
+        function updateMetrics(event) {
+            if (event.kind === 'metrics.recorded') {
+                const { throughput_events_per_sec, latency_ms, memory_mb } = event.payload;
+                document.getElementById('metricThroughput').textContent = `${throughput_events_per_sec}/s`;
+                document.getElementById('metricLatency').textContent = `${latency_ms}ms`;
+                document.getElementById('metricMemory').textContent = `${memory_mb}MB`;
+            }
+            if (event.kind === 'run.complete') {
+                const { duration_ms } = event.payload;
+                document.getElementById('metricDuration').textContent = `${(duration_ms / 1000).toFixed(1)}s`;
+            }
+        }
+
+        // Show decision gate
+        function showDecisionGate(event) {
+            if (event.kind === 'decision.gate') {
+                const { question, options } = event.payload;
+                document.getElementById('gateInactive').style.display = 'none';
+                document.getElementById('decisionGateContainer').style.display = 'block';
+                document.getElementById('gateQuestion').textContent = question;
+                document.getElementById('statusBadge').className = 'status-badge status-waiting';
+                document.getElementById('statusBadge').textContent = 'Awaiting Decision';
+            }
+        }
+
+        // Handle feedback submission
+        async function submitFeedback(decision) {
+            const feedback = decision || document.getElementById('feedbackText').value;
+            if (!feedback.trim() || !currentRunId) return;
+
+            try {
+                const response = await fetch(`${API_BASE}/reasoning/feedback`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ run_id: currentRunId, feedback })
+                });
+
+                if (response.ok) {
+                    document.getElementById('feedbackText').value = '';
+                    document.getElementById('feedbackSuccess').style.display = 'block';
+                    setTimeout(() => {
+                        document.getElementById('feedbackSuccess').style.display = 'none';
+                    }, 3000);
+                }
+            } catch (error) {
+                document.getElementById('feedbackError').textContent = `Error: ${error.message}`;
+                document.getElementById('feedbackError').style.display = 'block';
+            }
+        }
+
+        // Connect to SSE stream
+        function connectToStream() {
+            const runIdInput = document.getElementById('runIdInput').value.trim();
+            currentRunId = runIdInput || `demo-${Date.now()}`;
+            document.getElementById('runIdInput').value = currentRunId;
+
+            if (eventSource) {
+                eventSource.close();
+            }
+
+            graphNodes = [];
+            graphEdges = [];
+            document.getElementById('eventsList').innerHTML = '<div style="color: #888; font-size: 12px;">Waiting for events...</div>';
+            document.getElementById('decisionGateContainer').style.display = 'none';
+            document.getElementById('gateInactive').style.display = 'block';
+            document.getElementById('statusBadge').className = 'status-badge status-disconnected';
+            document.getElementById('statusBadge').textContent = 'Connecting...';
+
+            initializeNetwork();
+
+            eventSource = new EventSource(`${API_BASE}/reasoning/stream?run_id=${encodeURIComponent(currentRunId)}`);
+
+            eventSource.onopen = () => {
+                document.getElementById('statusBadge').className = 'status-badge status-connected';
+                document.getElementById('statusBadge').textContent = 'Connected';
+            };
+
+            eventSource.onmessage = (e) => {
+                try {
+                    const event = JSON.parse(e.data);
+                    addEventToGraph(event);
+                    addEventToList(event);
+                    updateMetrics(event);
+                    showDecisionGate(event);
+                } catch (error) {
+                    console.error('Failed to parse event:', error);
+                }
+            };
+
+            eventSource.onerror = () => {
+                document.getElementById('statusBadge').className = 'status-badge status-disconnected';
+                document.getElementById('statusBadge').textContent = 'Disconnected';
+                eventSource.close();
+            };
+        }
+
+        // Event listeners
+        document.getElementById('connectBtn').addEventListener('click', connectToStream);
+        document.getElementById('runIdInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') connectToStream();
+        });
+
+        document.getElementById('sendFeedbackBtn').addEventListener('click', () => submitFeedback());
+        document.getElementById('gateApprove').addEventListener('click', () => submitFeedback('approve'));
+        document.getElementById('gateRevise').addEventListener('click', () => submitFeedback('revise'));
+        document.getElementById('gateReject').addEventListener('click', () => submitFeedback('reject'));
+
+        // Auto-connect with default run ID
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                connectToStream();
+            }, 500);
+        });
+    </script>
+</body>
+</html>

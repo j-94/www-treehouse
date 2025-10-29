@@ -1,0 +1,12 @@
+{"ts": "2025-10-28T19:06:40.355380+00:00", "mode": "spawn", "tool": "bg_agent", "args_hash": "f1d90496d2210232", "verdict": "spawned", "latency_ms": 0}
+{"ts": "2025-10-28T19:06:40.355567+00:00", "mode": "spawn", "tool": "bg_agent", "args_hash": "7b773585710fcd23", "verdict": "spawned", "latency_ms": 0}
+{"ts": "2025-10-28T19:06:40.355628+00:00", "mode": "spawn", "tool": "bg_agent", "args_hash": "32bc7384f9a81800", "verdict": "spawned", "latency_ms": 0}
+{"ts": "2025-10-28T19:06:40.856589+00:00", "mode": "wait", "tool": "bg_agent", "args_hash": "1055906584ac775d", "verdict": "complete", "latency_ms": 500}
+{"ts": "2025-10-28T19:06:41.359078+00:00", "mode": "wait", "tool": "bg_agent", "args_hash": "f71927b5a3fff097", "verdict": "complete", "latency_ms": 501}
+{"ts": "2025-10-28T19:06:41.864753+00:00", "mode": "wait", "tool": "bg_agent", "args_hash": "967ca7621a917db1", "verdict": "complete", "latency_ms": 502}
+{"ts": "2025-10-28T19:10:33.777117+00:00", "mode": "spawn", "tool": "bg_agent", "args_hash": "f1d90496d2210232", "verdict": "spawned", "latency_ms": 0}
+{"ts": "2025-10-28T19:10:33.777349+00:00", "mode": "spawn", "tool": "bg_agent", "args_hash": "7b773585710fcd23", "verdict": "spawned", "latency_ms": 0}
+{"ts": "2025-10-28T19:10:33.777408+00:00", "mode": "spawn", "tool": "bg_agent", "args_hash": "32bc7384f9a81800", "verdict": "spawned", "latency_ms": 0}
+{"ts": "2025-10-28T19:10:34.278986+00:00", "mode": "wait", "tool": "bg_agent", "args_hash": "1055906584ac775d", "verdict": "complete", "latency_ms": 501}
+{"ts": "2025-10-28T19:10:34.782766+00:00", "mode": "wait", "tool": "bg_agent", "args_hash": "f71927b5a3fff097", "verdict": "complete", "latency_ms": 502}
+{"ts": "2025-10-28T19:10:35.285705+00:00", "mode": "wait", "tool": "bg_agent", "args_hash": "967ca7621a917db1", "verdict": "complete", "latency_ms": 501}
